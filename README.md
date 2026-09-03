@@ -1,6 +1,6 @@
 # Air Data Lab
 
-Laboratorio web statico e interattivo per Meccanica del Volo. La demo mette in relazione un profilo verticale animato, un anemometro virtuale, un altimetro virtuale e i regolaggi QFE, QNH e STD.
+Laboratorio web statico e interattivo per Meccanica del Volo. La demo mette in relazione un profilo verticale animato, un anemometro virtuale, un altimetro virtuale, un variometro e i regolaggi QFE, QNH e STD.
 
 ## Avvio locale
 
@@ -21,6 +21,8 @@ In alternativa è possibile usare qualsiasi server statico. L’apertura diretta
 - `air-data-model.js` — funzioni numeriche pure, riutilizzabili e testabili.
 - `app.js` — stato dell’interazione, rendering live, modalità didattiche e challenge QFE.
 - `tests/app.test.js` — test numerici ISA, catena pitot-statico, QFE e blocco statico.
+
+Il cockpit consente di cambiare TAS e osservare la lancetta IAS/CAS in movimento. Il variometro permette di impostare un rateo di salita o discesa e avviare una simulazione temporale: l’aeromobile e le quote nella scena si spostano mentre pressione e strumenti vengono ricalcolati.
 
 ## Modello didattico
 
