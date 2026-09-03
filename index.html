@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Air Data Lab: laboratorio interattivo su anemometro, altimetro e regolaggi altimetrici.">
+  <title>Air Data Lab — strumenti virtuali</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar" id="top">
+    <a class="brand" href="#top" aria-label="Air Data Lab, torna all'inizio">
+      <span class="brand-mark" aria-hidden="true">AD</span>
+      <span>
+        <strong>Air Data Lab</strong>
+        <small>Meccanica del volo · modulo interattivo</small>
+      </span>
+    </a>
+    <div class="topbar-status" aria-label="Stato del modello">
+      <span class="live-indicator"><span aria-hidden="true"></span> modello live</span>
+      <span class="status-divider" aria-hidden="true"></span>
+      <span>ISA · subsonico</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero section-wrap" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">AIR DATA / 01</p>
+        <h1 id="page-title">Vedi la quota.<br><em>Leggi l’aria.</em></h1>
+        <p class="hero-lede">Muovi l’aeromobile, regola il riferimento altimetrico e osserva come pressione e strumenti cambiano insieme.</p>
+        <div class="hero-facts" aria-label="Concetti esplorati">
+          <span><b>01</b> Pitot-statico</span>
+          <span><b>02</b> IAS / CAS / EAS / TAS</span>
+          <span><b>03</b> QFE / QNH / STD</span>
+        </div>
+      </div>
+      <div class="hero-diagram" aria-hidden="true">
+        <div class="hero-orbit orbit-one"></div>
+        <div class="hero-orbit orbit-two"></div>
+        <div class="hero-plane">✦</div>
+        <span class="diagram-label label-msl">MSL</span>
+        <span class="diagram-label label-qfe">QFE</span>
+        <span class="diagram-label label-tas">TAS</span>
+      </div>
+    </section>
+
+    <nav class="mode-switch section-wrap" aria-label="Modalità del laboratorio" role="tablist">
+      <button class="mode-tab is-active" id="tab-guided" type="button" role="tab" aria-selected="true" aria-controls="mode-guided" data-mode="guided">
+        <span class="tab-number">01</span><span><strong>Guided</strong><small>capisci il principio</small></span>
+      </button>
+      <button class="mode-tab" id="tab-explore" type="button" role="tab" aria-selected="false" aria-controls="mode-explore" data-mode="explore" tabindex="-1">
+        <span class="tab-number">02</span><span><strong>Explore</strong><small>muovi i parametri</small></span>
+      </button>
+      <button class="mode-tab" id="tab-challenge" type="button" role="tab" aria-selected="false" aria-controls="mode-challenge" data-mode="challenge" tabindex="-1">
+        <span class="tab-number">03</span><span><strong>Challenge</strong><small>prendi una decisione</small></span>
+      </button>
+    </nav>
+
+    <section class="mode-panel section-wrap is-active" id="mode-guided" role="tabpanel" aria-labelledby="tab-guided">
+      <div>
+        <p class="eyebrow">GUIDED / checkpoint</p>
+        <h2>Prima individua la pressione.</h2>
+        <p>Il sistema dati aria separa pressione totale e pressione statica. L’altimetro usa la pressione statica; il tubo di Pitot porta la pressione di ristagno all’anemometro.</p>
+      </div>
+      <div class="checkpoint card" id="guided-checkpoint">
+        <p class="checkpoint-label">Prediction checkpoint</p>
+        <p class="checkpoint-question">Quale pressione usa direttamente l’altimetro?</p>
+        <div class="choice-row" role="group" aria-label="Risposta al checkpoint guidato">
+          <label><input type="radio" name="guided-answer" value="pt"> <span><b>P<sub>t</sub></b><small>totale</small></span></label>
+          <label><input type="radio" name="guided-answer" value="ps"> <span><b>P<sub>s</sub></b></span><small>statica</small></label>
+          <label><input type="radio" name="guided-answer" value="q"> <span><b>q</b><small>dinamica</small></span></label>
+        </div>
+        <button class="button button-small" id="guided-check" type="button" disabled>Controlla</button>
+        <p class="checkpoint-feedback" id="guided-feedback" hidden></p>
+      </div>
+    </section>
+
+    <section class="mode-panel section-wrap" id="mode-explore" role="tabpanel" aria-labelledby="tab-explore" hidden>
+      <div>
+        <p class="eyebrow">EXPLORE / laboratorio</p>
+        <h2>Fai variare una cosa alla volta.</h2>
+        <p>Osserva la relazione tra quota reale, pressione statica, pressione dinamica e letture strumentali. Il pannello qui sotto è sempre live.</p>
+      </div>
+      <div class="explore-note card"><span class="note-icon" aria-hidden="true">↗</span><p><strong>Suggerimento</strong><br>Prova prima a cambiare solo il setting, poi solo la quota. Le due azioni hanno effetti diversi.</p></div>
+    </section>
+
+    <section class="mode-panel section-wrap" id="mode-challenge" role="tabpanel" aria-labelledby="tab-challenge" hidden>
+      <div>
+        <p class="eyebrow">CHALLENGE / altimetria</p>
+        <h2>Porta la pista a zero.</h2>
+        <p>Sei sulla pista di un aeroporto posto a 2.000 ft MSL. Scegli il riferimento che deve far leggere 0 ft all’altimetro.</p>
+      </div>
+      <div class="challenge card" id="qfe-challenge">
+        <div class="challenge-heading"><span class="challenge-badge" id="challenge-status">PREDICI</span><span class="challenge-score">1 decisione</span></div>
+        <p class="checkpoint-question">Quale setting deve essere selezionato affinché l’altimetro legga <strong>0 ft</strong> sulla pista?</p>
+        <fieldset class="setting-choices" id="challenge-choices">
+          <legend class="sr-only">Scegli il setting altimetrico</legend>
+          <label><input type="radio" name="challenge-setting" value="qnh"><span><b>QNH</b><small>riferimento MSL</small></span></label>
+          <label><input type="radio" name="challenge-setting" value="qfe"><span><b>QFE</b><small>riferimento pista</small></span></label>
+          <label><input type="radio" name="challenge-setting" value="std"><span><b>STD</b><small>1013,25 hPa</small></span></label>
+        </fieldset>
+        <button class="button" id="challenge-check" type="button" disabled>Conferma scelta</button>
+        <div class="challenge-feedback" id="challenge-feedback" hidden aria-live="polite"></div>
+        <button class="text-button" id="challenge-reset" type="button" hidden>Riprova</button>
+      </div>
+    </section>
+
+    <section class="lab section-wrap" aria-labelledby="lab-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">LIVE COCKPIT</p><h2 id="lab-title">La cabina è in ascolto.</h2></div>
+        <p class="model-caption">Scenario: aeroporto a <strong>2.000 ft MSL</strong><br>QNH demo: <strong>1005,00 hPa</strong></p>
+      </div>
+
+      <div class="lab-grid">
+        <aside class="controls-card card" aria-labelledby="controls-title">
+          <div class="card-heading"><span class="section-index">A</span><div><p class="eyebrow">INPUT</p><h3 id="controls-title">Comandi di volo</h3></div></div>
+
+          <fieldset class="control-group">
+            <legend>Stato dell’aeromobile</legend>
+            <label class="range-label" for="altitude-range"><span>Quota reale <small>MSL</small></span><output id="altitude-output" for="altitude-range">2.000 ft</output></label>
+            <input id="altitude-range" type="range" min="0" max="36000" step="100" value="2000">
+            <div class="range-endpoints"><span>0 ft</span><span>36.000 ft</span></div>
+            <label class="number-label" for="altitude-number">Valore preciso <span>ft</span></label>
+            <input class="number-input" id="altitude-number" type="number" min="0" max="36000" step="100" value="2000">
+
+            <label class="range-label" for="tas-range"><span>TAS <small>velocità vera</small></span><output id="tas-output" for="tas-range">180 kt</output></label>
+            <input id="tas-range" type="range" min="40" max="420" step="1" value="180">
+            <div class="range-endpoints"><span>40 kt</span><span>420 kt</span></div>
+            <label class="number-label" for="tas-number">Valore preciso <span>kt</span></label>
+            <input class="number-input" id="tas-number" type="number" min="40" max="420" step="1" value="180">
+          </fieldset>
+
+          <fieldset class="control-group">
+            <legend>Regolaggio altimetrico</legend>
+            <label class="field-label" for="setting-preset">Riferimento</label>
+            <select class="select-input" id="setting-preset">
+              <option value="qfe">QFE · pista</option>
+              <option value="qnh" selected>QNH · MSL</option>
+              <option value="std">STD · 1013,25 hPa</option>
+              <option value="custom">Manuale</option>
+            </select>
+            <label class="number-label" for="setting-pressure">Pressione impostata <span>hPa</span></label>
+            <input class="number-input" id="setting-pressure" type="number" min="850" max="1050" step="0.01" value="1005.00">
+            <p class="field-help" id="setting-help">QNH: quota riferita al livello medio del mare.</p>
+          </fieldset>
+
+          <fieldset class="control-group compact-group">
+            <legend>Correzioni e guasti</legend>
+            <label class="range-label" for="position-error-range"><span>Errore di posizione <small>CAS − IAS</small></span><output id="position-error-output" for="position-error-range">0 kt</output></label>
+            <input id="position-error-range" type="range" min="-5" max="10" step="0.5" value="0">
+            <label class="check-label"><input id="static-blockage" type="checkbox"><span><strong>Blocca la presa statica</strong><small>la pressione statica dello strumento resta congelata</small></span></label>
+          </fieldset>
+
+          <button class="reset-button" id="reset-lab" type="button">↺ Ripristina scenario</button>
+        </aside>
+
+        <div class="visual-column">
+          <section class="scene-card card" aria-labelledby="scene-title">
+            <div class="card-heading scene-heading"><span class="section-index">B</span><div><p class="eyebrow">VERTICAL PROFILE</p><h3 id="scene-title">Quote in movimento</h3></div><span class="status-pill" id="scene-status">LIVE</span></div>
+            <div class="scene-wrap">
+              <svg id="altitude-scene" viewBox="0 0 520 660" role="img" aria-labelledby="scene-title scene-description">
+                <title id="scene-description">Profilo verticale con livello del mare, aeroporto e aeromobile in volo</title>
+                <defs>
+                  <linearGradient id="sky-gradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#152c4a"></stop><stop offset="70%" stop-color="#4d7995"></stop><stop offset="100%" stop-color="#d5b77a"></stop>
+                  </linearGradient>
+                  <filter id="plane-shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-opacity=".25"></feDropShadow></filter>
+                </defs>
+                <rect class="scene-background" x="0" y="0" width="520" height="660" rx="18" fill="url(#sky-gradient)"></rect>
+                <g id="scene-clouds" opacity=".2"><path d="M110 130c20-35 65-32 76 0 29-23 72-2 65 31H72c-7-16 9-33 38-31z" fill="#fff"></path><path d="M325 250c13-24 43-22 51 0 22-18 49-1 45 22H300c-4-12 7-23 25-22z" fill="#fff"></path></g>
+                <g id="scene-ticks"></g>
+                <line id="scene-msl" class="datum-line datum-msl" x1="105" y1="600" x2="472" y2="600"></line>
+                <text class="scene-fixed-label" x="425" y="594">MSL</text>
+                <g id="scene-runway" class="runway-group">
+                  <line class="runway-line" x1="105" y1="570" x2="472" y2="570"></line><line class="runway-center" x1="230" y1="570" x2="340" y2="570"></line>
+                  <text class="scene-fixed-label" x="386" y="564">PISTA · 2.000 ft</text>
+                </g>
+                <g id="scene-reference"><line id="scene-reference-line" class="reference-line" x1="105" y1="600" x2="472" y2="600"></line><text id="scene-reference-label" class="reference-label" x="116" y="590">zero indicato</text></g>
+                <line id="scene-aircraft-line" class="aircraft-line" x1="105" y1="450" x2="472" y2="450"></line>
+                <g id="aircraft" class="aircraft" transform="translate(270 450)" filter="url(#plane-shadow)"><path d="M0-3 27-9 42-5 28 0 19 16 13 16 16 1 0 0-12 10-17 9-9-1-17-7-12-9z" fill="#f5a24c"></path><circle cx="1" cy="-2" r="3" fill="#fff3d6"></circle></g>
+                <g id="scene-altitude-marker"><rect x="372" y="426" width="108" height="42" rx="10" fill="#f8fbff" opacity=".96"></rect><text id="scene-altitude-label" class="aircraft-readout" x="386" y="446">2.000 ft</text><text id="scene-height-label" class="aircraft-subreadout" x="386" y="460">height +0 ft</text></g>
+                <text id="scene-pressure-label" class="scene-pressure-label" x="118" y="625">Ps 93,5 hPa</text>
+                <text id="scene-setting-note" class="scene-setting-note" x="472" y="625" text-anchor="end">QNH · MSL</text>
+              </svg>
+            </div>
+            <div class="scene-legend"><span><i class="legend-dot aircraft-dot"></i>aeromobile</span><span><i class="legend-line runway-dot"></i>pista</span><span><i class="legend-line reference-dot"></i>datum impostato</span></div>
+          </section>
+
+          <div class="instrument-grid">
+            <section class="instrument-card card" aria-labelledby="altimeter-title">
+              <div class="card-heading"><span class="section-index">C</span><div><p class="eyebrow">STATIC PRESSURE</p><h3 id="altimeter-title">Altimetro</h3></div><span class="instrument-tag" id="altimeter-tag">QNH</span></div>
+              <div class="gauge-wrap">
+                <svg id="altimeter-gauge" class="gauge" viewBox="0 0 240 240" role="img" aria-label="Altimetro virtuale">
+                  <circle class="gauge-face" cx="120" cy="120" r="106"></circle><circle class="gauge-inner" cx="120" cy="120" r="96"></circle><g id="altimeter-ticks"></g>
+                  <text class="gauge-unit" x="120" y="91" text-anchor="middle">ALT</text><text id="altimeter-gauge-value" class="gauge-center-value" x="120" y="111" text-anchor="middle">2.000</text><text class="gauge-unit" x="120" y="130" text-anchor="middle">ft</text>
+                  <line id="altimeter-long-needle" class="needle needle-long" x1="120" y1="120" x2="120" y2="35"></line><line id="altimeter-short-needle" class="needle needle-short" x1="120" y1="120" x2="120" y2="64"></line><circle class="needle-hub" cx="120" cy="120" r="7"></circle>
+                </svg>
+              </div>
+              <div class="instrument-digital"><div><span>indicata</span><strong id="altimeter-reading">2.000 ft</strong></div><div><span>setting</span><strong id="altimeter-setting-readout">1005,00 hPa</strong></div></div>
+              <p class="instrument-note" id="altimeter-note">Quota indicata rispetto al livello medio del mare.</p>
+            </section>
+
+            <section class="instrument-card card" aria-labelledby="airspeed-title">
+              <div class="card-heading"><span class="section-index">D</span><div><p class="eyebrow">PITOT / STATIC</p><h3 id="airspeed-title">Anemometro</h3></div><span class="instrument-tag orange">IAS</span></div>
+              <div class="gauge-wrap">
+                <svg id="airspeed-gauge" class="gauge" viewBox="0 0 240 240" role="img" aria-label="Anemometro virtuale">
+                  <circle class="gauge-face" cx="120" cy="120" r="106"></circle><path class="gauge-arc arc-green" d="M38 170 A106 106 0 0 1 28 96"></path><path class="gauge-arc arc-yellow" d="M28 96 A106 106 0 0 1 50 48"></path><path class="gauge-arc arc-red" d="M50 48 A106 106 0 0 1 83 25"></path><g id="airspeed-ticks"></g>
+                  <text class="gauge-unit" x="120" y="91" text-anchor="middle">IAS</text><text id="airspeed-gauge-value" class="gauge-center-value" x="120" y="111" text-anchor="middle">174</text><text class="gauge-unit" x="120" y="130" text-anchor="middle">kt</text>
+                  <line id="airspeed-needle" class="needle speed-needle" x1="120" y1="120" x2="120" y2="33"></line><circle class="needle-hub orange-hub" cx="120" cy="120" r="7"></circle>
+                </svg>
+              </div>
+              <div class="instrument-digital"><div><span>lettura IAS</span><strong id="airspeed-reading">174 kt</strong></div><div><span>Mach</span><strong id="mach-reading">0,27</strong></div></div>
+              <p class="instrument-note" id="airspeed-note">Il differenziale P<sub>t</sub> − P<sub>s</sub> alimenta la lettura.</p>
+            </section>
+          </div>
+
+          <section class="data-strip card" aria-labelledby="data-title">
+            <div class="card-heading"><span class="section-index">E</span><div><p class="eyebrow">AIR DATA CHAIN</p><h3 id="data-title">La catena, senza saltare passaggi</h3></div></div>
+            <div class="data-chain">
+              <div class="data-cell"><span>P<sub>s</sub> statica</span><strong id="ps-readout">935 hPa</strong><small>altimetro</small></div><span class="chain-arrow" aria-hidden="true">→</span>
+              <div class="data-cell"><span>q = P<sub>t</sub> − P<sub>s</sub></span><strong id="q-readout">2.237 Pa</strong><small>pressione dinamica</small></div><span class="chain-arrow" aria-hidden="true">→</span>
+              <div class="data-cell"><span>CAS</span><strong id="cas-readout">177 kt</strong><small>calibrata</small></div><span class="chain-arrow" aria-hidden="true">→</span>
+              <div class="data-cell"><span>EAS</span><strong id="eas-readout">167 kt</strong><small>equivalente</small></div><span class="chain-arrow" aria-hidden="true">→</span>
+              <div class="data-cell"><span>TAS</span><strong id="tas-readout">180 kt</strong><small>vera</small></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="principle section-wrap" aria-labelledby="principle-title">
+      <div class="principle-mark" aria-hidden="true">↕</div>
+      <div><p class="eyebrow">OSSERVA / SPIEGA</p><h2 id="principle-title">Un riferimento cambia la domanda, non la posizione dell’aeromobile.</h2><p id="live-explanation">Il setting selezionato definisce il datum dello strumento. La quota reale dell’aeromobile resta la stessa.</p></div>
+    </section>
+  </main>
+
+  <footer class="footer section-wrap"><span>Air Data Lab · v0.1</span><span>Modello educativo ISA · verificare le definizioni con il docente</span></footer>
+
+  <script src="air-data-model.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
+
