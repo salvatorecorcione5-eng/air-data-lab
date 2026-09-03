@@ -15,12 +15,15 @@
     altitudeFt: 2000,
     tasKnots: 180,
     positionErrorKnots: 0,
+    verticalSpeedFpm: 0,
     settingMode: "qnh",
     settingPressureHpa: CONFIG.scenarioQnhHpa,
     staticBlocked: false,
     blockedPressurePa: null,
     challengeChoice: null,
-    challengeAnswered: false
+    challengeAnswered: false,
+    flightRunning: false,
+    flightTimer: null
   };
 
   const $ = (id) => document.getElementById(id);
@@ -30,14 +33,16 @@
     altitudeRange: $("altitude-range"), altitudeNumber: $("altitude-number"), altitudeOutput: $("altitude-output"),
     tasRange: $("tas-range"), tasNumber: $("tas-number"), tasOutput: $("tas-output"),
     settingPreset: $("setting-preset"), settingPressure: $("setting-pressure"), settingHelp: $("setting-help"),
-    positionErrorRange: $("position-error-range"), positionErrorOutput: $("position-error-output"),
+    positionErrorRange: $("position-error-range"), positionErrorOutput: $("position-error-output"), verticalSpeedRange: $("vertical-speed-range"), verticalSpeedOutput: $("vertical-speed-output"),
+    flightToggle: $("flight-toggle"), flightToggleLabel: $("flight-toggle-label"), flightStatus: $("flight-status"), flightReadout: $("flight-readout"),
     staticBlockage: $("static-blockage"), resetLab: $("reset-lab"),
     sceneTicks: $("scene-ticks"), aircraft: $("aircraft"), aircraftLine: $("scene-aircraft-line"), aircraftLabel: $("scene-altitude-label"),
     sceneHeightLabel: $("scene-height-label"), sceneReferenceLine: $("scene-reference-line"), sceneReferenceLabel: $("scene-reference-label"),
     scenePressureLabel: $("scene-pressure-label"), sceneSettingNote: $("scene-setting-note"), sceneStatus: $("scene-status"),
     altimeterTicks: $("altimeter-ticks"), altimeterLongNeedle: $("altimeter-long-needle"), altimeterShortNeedle: $("altimeter-short-needle"),
     altimeterGaugeValue: $("altimeter-gauge-value"), altimeterTag: $("altimeter-tag"), altimeterReading: $("altimeter-reading"), altimeterSettingReadout: $("altimeter-setting-readout"), altimeterNote: $("altimeter-note"),
-    airspeedTicks: $("airspeed-ticks"), airspeedNeedle: $("airspeed-needle"), airspeedGaugeValue: $("airspeed-gauge-value"), airspeedReading: $("airspeed-reading"), machReading: $("mach-reading"), airspeedNote: $("airspeed-note"),
+    airspeedTicks: $("airspeed-ticks"), airspeedNeedle: $("airspeed-needle"), airspeedGaugeValue: $("airspeed-gauge-value"), airspeedReading: $("airspeed-reading"), airspeedTasReading: $("airspeed-tas-reading"), machReading: $("mach-reading"), airspeedNote: $("airspeed-note"),
+    vsiTicks: $("vsi-ticks"), vsiNeedle: $("vsi-needle"), vsiGaugeValue: $("vsi-gauge-value"), vsiReading: $("vsi-reading"), vsiGauge: $("vsi-gauge"),
     psReadout: $("ps-readout"), qReadout: $("q-readout"), casReadout: $("cas-readout"), easReadout: $("eas-readout"), tasReadout: $("tas-readout"),
     liveExplanation: $("live-explanation"),
     guidedCheck: $("guided-check"), guidedFeedback: $("guided-feedback"),
@@ -104,6 +109,25 @@
       fragment.appendChild(line); fragment.appendChild(label);
     }
     els.sceneTicks.appendChild(fragment);
+  }
+
+  function createVsiTicks() {
+    if (!els.vsiTicks || els.vsiTicks.childElementCount) return;
+    const fragment = document.createDocumentFragment();
+    [-3000, -1500, 0, 1500, 3000].forEach((value) => {
+      const ratio = (value + 3000) / 6000;
+      const angle = -135 + ratio * 270;
+      const outer = polarPoint(120, 120, 91, angle);
+      const inner = polarPoint(120, 120, value === 0 ? 77 : 82, angle);
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("x1", inner.x); line.setAttribute("y1", inner.y); line.setAttribute("x2", outer.x); line.setAttribute("y2", outer.y); line.setAttribute("class", value === 0 ? "gauge-tick gauge-tick-major" : "gauge-tick");
+      fragment.appendChild(line);
+      const labelPoint = polarPoint(120, 120, 65, angle);
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", labelPoint.x); text.setAttribute("y", labelPoint.y + 3); text.setAttribute("text-anchor", "middle"); text.setAttribute("class", "gauge-label"); text.textContent = value === 0 ? "0" : `${value / 1000}k`;
+      fragment.appendChild(text);
+    });
+    els.vsiTicks.appendChild(fragment);
   }
 
   function getPresetPressure(mode) {
@@ -173,14 +197,17 @@
     els.sceneReferenceLabel.setAttribute("y", referenceY - 7);
     setText(els.scenePressureLabel, `Ps ${formatNumber(model.paToHpa(data.sensorStaticPressurePa), 1)} hPa`);
     setText(els.sceneSettingNote, `${state.settingMode.toUpperCase()} · ${formatNumber(state.settingPressureHpa, 2)} hPa`);
-    els.sceneStatus.textContent = state.staticBlocked ? "STATIC BLOCCATA" : "LIVE";
+    els.sceneStatus.textContent = state.staticBlocked ? "STATIC BLOCCATA" : state.flightRunning ? "SIMULAZIONE" : "LIVE";
     els.sceneStatus.classList.toggle("is-warning", state.staticBlocked);
+    els.sceneStatus.classList.toggle("is-sim", !state.staticBlocked && state.flightRunning);
   }
 
   function renderAltimeter(data) {
     const indication = data.indicatedAltitudeFt;
     const longAngle = ((indication % 10000) + 10000) % 10000 / 10000 * 360;
     const shortAngle = ((indication % 100000) + 100000) % 100000 / 100000 * 360;
+    els.altimeterLongNeedle.setAttribute("transform", `rotate(${longAngle} 120 120)`);
+    els.altimeterShortNeedle.setAttribute("transform", `rotate(${shortAngle} 120 120)`);
     els.altimeterLongNeedle.style.transform = `rotate(${longAngle}deg)`;
     els.altimeterShortNeedle.style.transform = `rotate(${shortAngle}deg)`;
     setText(els.altimeterGaugeValue, formatNumber(Math.round(indication), 0));
@@ -195,9 +222,14 @@
   function renderAirspeed(data) {
     const airspeed = data.airspeed;
     const speedAngle = -135 + model.clamp(airspeed.iasKnots / 400, 0, 1) * 270;
+    const speedTransform = `rotate(${speedAngle} 120 120)`;
+    // The SVG transform fixes the needle geometry; the CSS transform keeps
+    // the transition smooth in browsers with different SVG implementations.
+    els.airspeedNeedle.setAttribute("transform", speedTransform);
     els.airspeedNeedle.style.transform = `rotate(${speedAngle}deg)`;
     setText(els.airspeedGaugeValue, formatNumber(Math.max(0, airspeed.iasKnots), 0));
     setText(els.airspeedReading, formatKnots(airspeed.iasKnots));
+    setText(els.airspeedTasReading, formatKnots(airspeed.tasKnots));
     setText(els.machReading, formatNumber(airspeed.mach, 2));
     setText(els.psReadout, `${formatNumber(model.paToHpa(data.sensorStaticPressurePa), 1)} hPa`);
     setText(els.qReadout, `${formatNumber(airspeed.measuredDynamicPressurePa, 0)} Pa`);
@@ -208,6 +240,18 @@
       ? "Presa statica bloccata: il differenziale misurato usa il valore statico congelato."
       : "Il differenziale Pₜ − Pₛ alimenta la lettura; CAS − IAS mostra l’errore di posizione.");
     els.airspeedGauge.setAttribute("aria-label", `Anemometro: IAS ${formatKnots(airspeed.iasKnots)}, CAS ${formatKnots(airspeed.casKnots)}`);
+  }
+
+  function renderVsi() {
+    const verticalSpeed = state.verticalSpeedFpm;
+    const vsiAngle = -135 + model.clamp((verticalSpeed + 3000) / 6000, 0, 1) * 270;
+    const vsiTransform = `rotate(${vsiAngle} 120 120)`;
+    els.vsiNeedle.setAttribute("transform", vsiTransform);
+    els.vsiNeedle.style.transform = `rotate(${vsiAngle}deg)`;
+    setText(els.vsiGaugeValue, `${verticalSpeed > 0 ? "+" : ""}${formatNumber(verticalSpeed / 1000, verticalSpeed % 1000 === 0 ? 0 : 1)}k`);
+    setText(els.vsiReading, `${verticalSpeed > 0 ? "+" : ""}${formatNumber(verticalSpeed, 0)} fpm`);
+    setText(els.flightReadout, state.flightRunning ? "RUN" : "PAUSA");
+    els.vsiGauge.setAttribute("aria-label", `Variometro: ${verticalSpeed} piedi al minuto, ${state.flightRunning ? "simulazione attiva" : "in pausa"}`);
   }
 
   function renderExplanation(data) {
@@ -225,12 +269,15 @@
 
   function render() {
     const data = computeData();
-    renderScene(data); renderAltimeter(data); renderAirspeed(data); renderExplanation(data);
+    renderScene(data); renderAltimeter(data); renderAirspeed(data); renderVsi(); renderExplanation(data);
     setText(els.altitudeOutput, formatFeet(state.altitudeFt)); setText(els.tasOutput, formatKnots(state.tasKnots));
     setText(els.positionErrorOutput, `${state.positionErrorKnots >= 0 ? "+" : ""}${formatNumber(state.positionErrorKnots, 1)} kt`);
+    setText(els.verticalSpeedOutput, `${state.verticalSpeedFpm > 0 ? "+" : ""}${formatNumber(state.verticalSpeedFpm, 0)} fpm`);
+    setText(els.flightStatus, state.flightRunning ? "RUN" : "PAUSA");
+    setText(els.flightToggleLabel, state.flightRunning ? "Metti in pausa" : "Avvia simulazione");
     els.altitudeRange.value = state.altitudeFt; els.altitudeNumber.value = state.altitudeFt;
     els.tasRange.value = state.tasKnots; els.tasNumber.value = state.tasKnots;
-    els.positionErrorRange.value = state.positionErrorKnots;
+    els.positionErrorRange.value = state.positionErrorKnots; els.verticalSpeedRange.value = state.verticalSpeedFpm;
   }
 
   function setNumericState(key, rawValue, minimum, maximum, integerStep) {
@@ -246,6 +293,33 @@
     state.staticBlocked = els.staticBlockage.checked;
     const scenarioQnhPa = model.hpaToPa(CONFIG.scenarioQnhHpa);
     state.blockedPressurePa = state.staticBlocked ? model.pressureAtAltitudeFt(state.altitudeFt, scenarioQnhPa) : null;
+    render();
+  }
+
+  function stopFlight() {
+    if (state.flightTimer !== null) window.clearInterval(state.flightTimer);
+    state.flightTimer = null;
+    state.flightRunning = false;
+  }
+
+  function toggleFlight() {
+    if (state.flightRunning) {
+      stopFlight();
+      render();
+      return;
+    }
+    state.flightRunning = true;
+    state.flightTimer = window.setInterval(() => {
+      const seconds = 0.25;
+      const nextAltitude = state.altitudeFt + (state.verticalSpeedFpm / 60) * seconds;
+      if (nextAltitude <= 0 || nextAltitude >= CONFIG.sceneMaxAltitudeFt) {
+        state.altitudeFt = model.clamp(nextAltitude, 0, CONFIG.sceneMaxAltitudeFt);
+        stopFlight();
+      } else {
+        state.altitudeFt = nextAltitude;
+      }
+      render();
+    }, 250);
     render();
   }
 
@@ -299,7 +373,7 @@
   }
 
   function resetLab() {
-    state.altitudeFt = 2000; state.tasKnots = 180; state.positionErrorKnots = 0; state.staticBlocked = false; state.blockedPressurePa = null; state.settingMode = "qnh"; state.settingPressureHpa = CONFIG.scenarioQnhHpa;
+    stopFlight(); state.altitudeFt = 2000; state.tasKnots = 180; state.positionErrorKnots = 0; state.verticalSpeedFpm = 0; state.staticBlocked = false; state.blockedPressurePa = null; state.settingMode = "qnh"; state.settingPressureHpa = CONFIG.scenarioQnhHpa;
     els.staticBlockage.checked = false; applyPreset("qnh"); render();
   }
 
@@ -310,9 +384,11 @@
     els.tasRange.addEventListener("input", (event) => setNumericState("tasKnots", event.target.value, 40, 420, 1));
     els.tasNumber.addEventListener("change", (event) => setNumericState("tasKnots", event.target.value, 40, 420, 1));
     els.positionErrorRange.addEventListener("input", (event) => setNumericState("positionErrorKnots", event.target.value, -5, 10, .5));
+    els.verticalSpeedRange.addEventListener("input", (event) => setNumericState("verticalSpeedFpm", event.target.value, -3000, 3000, 100));
     els.settingPreset.addEventListener("change", (event) => { applyPreset(event.target.value); render(); });
     els.settingPressure.addEventListener("change", (event) => { const value = Number(event.target.value); if (Number.isFinite(value)) { state.settingMode = "custom"; state.settingPressureHpa = model.clamp(value, 850, 1050); els.settingPreset.value = "custom"; updateSettingHelp(); render(); } });
     els.staticBlockage.addEventListener("change", updateStaticBlockage);
+    els.flightToggle.addEventListener("click", toggleFlight);
     els.resetLab.addEventListener("click", resetLab);
     els.guidedCheck.addEventListener("click", checkGuided);
     $$('input[name="guided-answer"]').forEach((input) => input.addEventListener("change", () => { els.guidedCheck.disabled = false; }));
@@ -323,6 +399,7 @@
   createSceneTicks();
   createGaugeTicks(els.altimeterTicks, 10, 1, 1, 0, 324, 1);
   createGaugeTicks(els.airspeedTicks, 400, 40, 80, -135, 135, 80);
+  createVsiTicks();
   updateSettingHelp(); bindEvents(); render();
 }());
 
