@@ -52,6 +52,16 @@ test("la catena pitot produce EAS minore di TAS e CAS in regime comprimibile", (
   assert.ok(result.mach > 0);
 });
 
+test("aumentando TAS aumenta la CAS indicata dall'anemometro", () => {
+  const qnhPa = model.hpaToPa(1005);
+  const staticPressurePa = model.pressureAtAltitudeFt(2000, qnhPa);
+  const temperatureK = model.isaTemperatureAtAltitudeFt(2000);
+  const slow = model.calculateAirspeed({ tasKnots: 120, staticPressurePa, temperatureK });
+  const fast = model.calculateAirspeed({ tasKnots: 300, staticPressurePa, temperatureK });
+  assert.ok(fast.casKnots > slow.casKnots);
+  assert.ok(fast.iasKnots > slow.iasKnots);
+});
+
 test("un blocco statico conserva la pressione catturata", () => {
   const qnhPa = model.hpaToPa(1005);
   const blockedPressurePa = model.pressureAtAltitudeFt(2000, qnhPa);
