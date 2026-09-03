@@ -149,7 +149,11 @@
             <legend>Correzioni e guasti</legend>
             <label class="range-label" for="position-error-range"><span>Errore di posizione <small>CAS − IAS</small></span><output id="position-error-output" for="position-error-range">0 kt</output></label>
             <input id="position-error-range" type="range" min="-5" max="10" step="0.5" value="0">
+            <label class="range-label" for="vertical-speed-range"><span>Variometro <small>salita / discesa</small></span><output id="vertical-speed-output" for="vertical-speed-range">0 fpm</output></label>
+            <input id="vertical-speed-range" type="range" min="-3000" max="3000" step="100" value="0">
+            <div class="range-endpoints"><span>−3.000 fpm</span><span>+3.000 fpm</span></div>
             <label class="check-label"><input id="static-blockage" type="checkbox"><span><strong>Blocca la presa statica</strong><small>la pressione statica dello strumento resta congelata</small></span></label>
+            <button class="button button-small flight-toggle" id="flight-toggle" type="button"><span id="flight-toggle-label">Avvia simulazione</span><span class="flight-status" id="flight-status">PAUSA</span></button>
           </fieldset>
 
           <button class="reset-button" id="reset-lab" type="button">↺ Ripristina scenario</button>
@@ -187,7 +191,7 @@
             <div class="scene-legend"><span><i class="legend-dot aircraft-dot"></i>aeromobile</span><span><i class="legend-line runway-dot"></i>pista</span><span><i class="legend-line reference-dot"></i>datum impostato</span></div>
           </section>
 
-          <div class="instrument-grid">
+          <div class="instrument-grid cockpit-deck">
             <section class="instrument-card card" aria-labelledby="altimeter-title">
               <div class="card-heading"><span class="section-index">C</span><div><p class="eyebrow">STATIC PRESSURE</p><h3 id="altimeter-title">Altimetro</h3></div><span class="instrument-tag" id="altimeter-tag">QNH</span></div>
               <div class="gauge-wrap">
@@ -210,13 +214,26 @@
                   <line id="airspeed-needle" class="needle speed-needle" x1="120" y1="120" x2="120" y2="33"></line><circle class="needle-hub orange-hub" cx="120" cy="120" r="7"></circle>
                 </svg>
               </div>
-              <div class="instrument-digital"><div><span>lettura IAS</span><strong id="airspeed-reading">174 kt</strong></div><div><span>Mach</span><strong id="mach-reading">0,27</strong></div></div>
+              <div class="instrument-digital"><div><span>lettura IAS</span><strong id="airspeed-reading">174 kt</strong></div><div><span>TAS</span><strong id="airspeed-tas-reading">180 kt</strong></div><div><span>Mach</span><strong id="mach-reading">0,27</strong></div></div>
               <p class="instrument-note" id="airspeed-note">Il differenziale P<sub>t</sub> − P<sub>s</sub> alimenta la lettura.</p>
+            </section>
+
+            <section class="instrument-card card" aria-labelledby="vsi-title">
+              <div class="card-heading"><span class="section-index">E</span><div><p class="eyebrow">VERTICAL SPEED</p><h3 id="vsi-title">Variometro</h3></div><span class="instrument-tag teal-tag">V/S</span></div>
+              <div class="gauge-wrap">
+                <svg id="vsi-gauge" class="gauge" viewBox="0 0 240 240" role="img" aria-label="Variometro virtuale">
+                  <circle class="gauge-face" cx="120" cy="120" r="106"></circle><circle class="gauge-inner" cx="120" cy="120" r="96"></circle><path class="gauge-arc arc-green" d="M38 170 A106 106 0 0 1 120 14"></path><path class="gauge-arc arc-red" d="M120 14 A106 106 0 0 1 202 170"></path><g id="vsi-ticks"></g>
+                  <text class="gauge-unit" x="120" y="91" text-anchor="middle">V/S</text><text id="vsi-gauge-value" class="gauge-center-value" x="120" y="111" text-anchor="middle">0</text><text class="gauge-unit" x="120" y="130" text-anchor="middle">fpm</text>
+                  <line id="vsi-needle" class="needle vsi-needle" x1="120" y1="120" x2="120" y2="33"></line><circle class="needle-hub" cx="120" cy="120" r="7"></circle>
+                </svg>
+              </div>
+              <div class="instrument-digital"><div><span>rateo verticale</span><strong id="vsi-reading">0 fpm</strong></div><div><span>stato volo</span><strong id="flight-readout">PAUSA</strong></div></div>
+              <p class="instrument-note">La simulazione muove l’aeromobile in base al rateo: positivo in salita, negativo in discesa.</p>
             </section>
           </div>
 
           <section class="data-strip card" aria-labelledby="data-title">
-            <div class="card-heading"><span class="section-index">E</span><div><p class="eyebrow">AIR DATA CHAIN</p><h3 id="data-title">La catena, senza saltare passaggi</h3></div></div>
+            <div class="card-heading"><span class="section-index">F</span><div><p class="eyebrow">AIR DATA CHAIN</p><h3 id="data-title">La catena, senza saltare passaggi</h3></div></div>
             <div class="data-chain">
               <div class="data-cell"><span>P<sub>s</sub> statica</span><strong id="ps-readout">935 hPa</strong><small>altimetro</small></div><span class="chain-arrow" aria-hidden="true">→</span>
               <div class="data-cell"><span>q = P<sub>t</sub> − P<sub>s</sub></span><strong id="q-readout">2.237 Pa</strong><small>pressione dinamica</small></div><span class="chain-arrow" aria-hidden="true">→</span>
