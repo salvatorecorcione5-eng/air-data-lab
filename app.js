@@ -202,21 +202,28 @@
     els.sceneStatus.classList.toggle("is-sim", !state.staticBlocked && state.flightRunning);
   }
 
-  function setSvgNeedleAngle(element, angle) {
+  function setNeedleGeometry(element, angle, length) {
     if (!element) return;
-    // Keep the rotation in the SVG transform attribute. A CSS transform on an
-    // SVG line can override the attribute (and use a different origin) in
-    // some browsers, making the needle appear frozen or jump incorrectly.
+    // Draw the line from the hub to the calculated endpoint. This avoids all
+    // CSS/SVG transform-origin differences and guarantees rotation around the
+    // instrument centre in every browser.
+    const radians = angle * Math.PI / 180;
+    const x2 = 120 + length * Math.sin(radians);
+    const y2 = 120 - length * Math.cos(radians);
     element.style.removeProperty("transform");
-    element.setAttribute("transform", `rotate(${angle} 120 120)`);
+    element.removeAttribute("transform");
+    element.setAttribute("x1", "120");
+    element.setAttribute("y1", "120");
+    element.setAttribute("x2", x2.toFixed(3));
+    element.setAttribute("y2", y2.toFixed(3));
   }
 
   function renderAltimeter(data) {
     const indication = data.indicatedAltitudeFt;
     const longAngle = ((indication % 10000) + 10000) % 10000 / 10000 * 360;
     const shortAngle = ((indication % 100000) + 100000) % 100000 / 100000 * 360;
-    setSvgNeedleAngle(els.altimeterLongNeedle, longAngle);
-    setSvgNeedleAngle(els.altimeterShortNeedle, shortAngle);
+    setNeedleGeometry(els.altimeterLongNeedle, longAngle, 85);
+    setNeedleGeometry(els.altimeterShortNeedle, shortAngle, 56);
     setText(els.altimeterGaugeValue, formatNumber(Math.round(indication), 0));
     setText(els.altimeterReading, formatFeet(indication));
     setText(els.altimeterSettingReadout, `${formatNumber(state.settingPressureHpa, 2)} hPa`);
@@ -229,7 +236,7 @@
   function renderAirspeed(data) {
     const airspeed = data.airspeed;
     const speedAngle = -135 + model.clamp(airspeed.iasKnots / 400, 0, 1) * 270;
-    setSvgNeedleAngle(els.airspeedNeedle, speedAngle);
+    setNeedleGeometry(els.airspeedNeedle, speedAngle, 87);
     setText(els.airspeedGaugeValue, formatNumber(Math.max(0, airspeed.iasKnots), 0));
     setText(els.airspeedReading, formatKnots(airspeed.iasKnots));
     setText(els.airspeedTasReading, formatKnots(airspeed.tasKnots));
@@ -248,7 +255,7 @@
   function renderVsi() {
     const verticalSpeed = state.verticalSpeedFpm;
     const vsiAngle = -135 + model.clamp((verticalSpeed + 3000) / 6000, 0, 1) * 270;
-    setSvgNeedleAngle(els.vsiNeedle, vsiAngle);
+    setNeedleGeometry(els.vsiNeedle, vsiAngle, 87);
     setText(els.vsiGaugeValue, `${verticalSpeed > 0 ? "+" : ""}${formatNumber(verticalSpeed / 1000, verticalSpeed % 1000 === 0 ? 0 : 1)}k`);
     setText(els.vsiReading, `${verticalSpeed > 0 ? "+" : ""}${formatNumber(verticalSpeed, 0)} fpm`);
     setText(els.flightReadout, state.flightRunning ? "RUN" : "PAUSA");
