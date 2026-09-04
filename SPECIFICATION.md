@@ -4,16 +4,16 @@
 Realizzare una web app statica per studenti universitari di Meccanica del Volo che supporti comprensione e consolidamento di: sistema pitot-statico, catena IAS–CAS–EAS–TAS e regolaggi altimetrici QNH/QFE/STD.
 
 ## 2. Principio didattico
-Ogni attività significativa segue il ciclo: **PREDICI → INTERAGISCI → OSSERVA → SPIEGA → VERIFICA**. L’app non deve fornire immediatamente la risposta corretta nei challenge.
+Ogni attività significativa segue il ciclo: **PREDICI → INTERAGISCI → OSSERVA → SPIEGA → VERIFICA**. L’app non deve fornire immediatamente la risposta corretta prima dell’azione dello studente.
 
 ## 3. Modalità
-- **Guided**: spiegazione guidata con prediction checkpoint.
-- **Explore**: esplorazione libera di parametri e setting.
-- **Challenge**: scenari con decisione dello studente, feedback dopo la scelta e spiegazione del principio.
+- **Cockpit**: pannello live Cessna 172 con comandi e strumenti sempre coordinati.
+- **Teoria**: percorso visuale animato del sistema Pitot/statico, della misura della velocità e dell’altimetro con capsula aneroide.
+- **Esercizi**: problemi progressivi sulla misura della velocità, con risposta verificata e formula di riferimento.
 
 ## 4. Moduli
 ### A. Pitot-statico
-Mostrare Pt, Ps, differenza Pt-Ps e strumenti associati. Prevedere almeno una simulazione di blocco della presa statica con prediction prima dell’esito.
+Mostrare Pt, Ps, differenza Pt-Ps e strumenti associati. Prevedere almeno una simulazione del blocco della presa statica.
 
 ### B. IAS / CAS / EAS / TAS
 Mostrare la sequenza delle correzioni e chiedere allo studente di identificare quale effetto viene corretto. Le equazioni e le definizioni aeronautiche saranno fornite/validate dal docente.
@@ -21,8 +21,10 @@ Mostrare la sequenza delle correzioni e chiedere allo studente di identificare q
 ### C. Altimetria
 Mostrare aerodromo, MSL, aeromobile, altimetro virtuale e pressione impostata. Consentire QNH, QFE e STD 1013.25 hPa. Distinguere chiaramente altitude, height e flight level.
 
-## 5. Challenge QFE per la demo
-Scenario: aeroporto con elevazione 2,000 ft MSL. Lo studente deve impostare il riferimento affinché l’altimetro legga 0 ft sulla pista. Prima di mostrare la soluzione chiedere una previsione; dopo la scelta mostrare feedback che spieghi il datum aerodromico.
+## 5. Pannello teoria ed esercizi
+Il pannello Teoria rende visibili, in tre fasi selezionabili, il flusso della pressione totale Pt dal tubo di Pitot, la pressione statica Ps dalle prese statiche, la differenza dinamica `q = Pt − Ps`, la relazione didattica `V ≈ √(2q/ρ)` e il percorso statico verso la capsula aneroide dell’altimetro. Lo spaccato mostra la cassa, la capsula, il leveraggio e l’indice; la deformazione è sincronizzata con la quota del cockpit.
+
+Il pannello Esercizi propone cinque attività: differenza Pt − Ps, correzione CAS/IAS, relazione EAS/TAS, lettura della catena nel modello ISA e riconoscimento della sequenza pitot-stat.
 
 ## 6. Vincoli tecnici
 - HTML/CSS/JavaScript client-side.
@@ -46,10 +48,11 @@ air-data-lab/
 
 ## 8. Criteri di accettazione
 1. Tutte le modalità sono raggiungibili dall’home.
-2. Ogni challenge richiede una decisione prima del feedback.
-3. Il challenge QFE demo funziona su desktop e smartphone.
-4. Nessun errore JavaScript nella console nei percorsi nominali.
-5. I test delle funzioni numeriche superano i casi dichiarati.
-6. Nessuna definizione aeronautica viene modificata senza esplicita approvazione del docente.
-7. README descrive avvio locale e pubblicazione come sito statico.
+2. La teoria mostra almeno il percorso Pitot/statico, l’anemometro e la capsula aneroide.
+3. Ogni esercizio richiede una risposta prima di mostrare feedback e soluzione.
+4. Teoria ed esercizi funzionano su desktop e smartphone.
+5. Nessun errore JavaScript nella console nei percorsi nominali.
+6. I test delle funzioni numeriche superano i casi dichiarati.
+7. Nessuna definizione aeronautica viene modificata senza esplicita approvazione del docente.
+8. README descrive avvio locale e pubblicazione come sito statico.
 

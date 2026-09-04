@@ -7,10 +7,10 @@
 - [ ] Casi non-standard non presentati in modo fuorviante.
 
 ## Gate didattico
-- [ ] Prediction prima del feedback nei challenge.
+- [ ] Risposta dello studente prima del feedback negli esercizi.
 - [ ] Lo studente deve prendere almeno una decisione significativa.
 - [ ] Feedback spiega il principio, non solo “corretto/errato”.
-- [ ] Modalità Guided/Explore/Challenge hanno ruoli distinti.
+- [ ] Modalità Cockpit/Teoria/Esercizi hanno ruoli distinti.
 
 ## Gate software
 - [ ] Nessun errore console nei percorsi nominali.

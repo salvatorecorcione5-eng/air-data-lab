@@ -11,20 +11,121 @@
   });
 
   const state = {
-    mode: "guided",
+    mode: "cockpit",
     altitudeFt: 2000,
-    tasKnots: 180,
+    tasKnots: 110,
     positionErrorKnots: 0,
     verticalSpeedFpm: 0,
     settingMode: "qnh",
     settingPressureHpa: CONFIG.scenarioQnhHpa,
     staticBlocked: false,
     blockedPressurePa: null,
-    challengeChoice: null,
-    challengeAnswered: false,
+    theoryStep: "pitot",
+    theoryPreviousAltitudeFt: 2000,
+    exerciseIndex: 0,
+    exerciseScore: 0,
+    exerciseGuideStep: 1,
+    exerciseAnswered: false,
     flightRunning: false,
     flightTimer: null
   };
+
+  const theoryMotion = {
+    capsuleScale: 1,
+    needleAngle: 0,
+    frameId: null,
+    initialized: false
+  };
+
+  const THEORY_STEPS = Object.freeze({
+    pitot: {
+      label: "01 / 03 · PRESSIONI",
+      mode: "PITOT-STATIC",
+      kicker: "01 · PRESSIONI DI RIFERIMENTO",
+      title: "Due prese, due informazioni.",
+      copy: "Il tubo di Pitot è orientato verso il flusso e porta la pressione totale Pt. Le prese statiche, invece, sentono la pressione statica Ps del campo circostante.",
+      equation: "Pt = Ps + q",
+      note: "L’aria entra nel tubo di Pitot e nelle prese statiche."
+    },
+    speed: {
+      label: "02 / 03 · VELOCITÀ",
+      mode: "AIRSPEED MEASUREMENT",
+      kicker: "02 · PRESSIONE DINAMICA",
+      title: "La differenza diventa velocità.",
+      copy: "L’anemometro confronta Pt e Ps. La differenza q è la pressione dinamica: dal suo valore si ricava prima la CAS e, dopo le correzioni, la IAS mostrata al pilota.",
+      equation: "q = Pt − Ps  →  CAS ≈ √(2q / ρ₀)  →  IAS",
+      note: "La pressione dinamica cresce con il quadrato della velocità."
+    },
+    altimeter: {
+      label: "03 / 03 · ALTIMETRO",
+      mode: "STATIC PRESSURE",
+      kicker: "03 · CAPSULA ANEROIDE",
+      title: "La pressione muove la capsula.",
+      copy: "La pressione statica entra nell’altimetro e agisce sulla capsula aneroide. Salendo, Ps diminuisce: la capsula si espande e il meccanismo traduce la deformazione in quota indicata.",
+      equation: "Ps ↓  →  capsula ↑  →  quota indicata ↑",
+      note: "Il setting QNH, QFE o STD definisce il datum della lettura."
+    }
+  });
+
+  const EXERCISES = Object.freeze([
+    {
+      type: "01 · DENSITÀ",
+      title: "Ricava la density-altitude",
+      question: "Un altimetro standard legge 7.000 m e la temperatura esterna è −10 °C. Qual è la density-altitude?",
+      data: [["Quota indicata", "7.000", "m"], ["Temperatura", "−10", "°C"], ["Costante gas", "287", "J/(kg K)"]],
+      theory: "La density-altitude è la quota ISA alla quale l’aria avrebbe la densità realmente calcolata. Prima si ricava ρ con la legge dei gas perfetti, poi si cerca la quota ISA equivalente.",
+      guide: [
+        { label: "01 · DATI", title: "Porta la temperatura in kelvin", copy: "La formula p = ρRT richiede la temperatura assoluta. La quota indicata permette di leggere la pressione ISA corrispondente.", formula: "T = −10 + 273,15 = 263,2 K" },
+        { label: "02 · PRESSIONE", title: "Usa il riferimento ISA", copy: "Dal materiale, a 7.000 m in atmosfera standard la pressione è circa 41.060 Pa.", formula: "p(7.000 m) ≈ 41.060 Pa" },
+        { label: "03 · DENSITÀ", title: "Applica i gas perfetti", copy: "Dividi la pressione per il prodotto tra costante del gas e temperatura assoluta.", formula: "ρ = p / (RT) = 41.060 / (287 · 263,2) = 0,5436 kg/m³" },
+        { label: "04 · RISULTATO", title: "Intervalla nella tabella ISA", copy: "La densità 0,5436 kg/m³ cade tra i valori ISA di 7.500 e 8.000 m. L’interpolazione lineare porta al risultato del materiale.", formula: "zDA ≈ 7.707 m" }
+      ],
+      kind: "number",
+      unit: "m",
+      expected: 7707,
+      tolerance: 15,
+      equation: "ρ = 0,5436 kg/m³ → interpolazione ISA → density-altitude ≈ 7.707 m",
+      feedback: "La density-altitude non è la quota indicata: è la quota ISA equivalente alla densità calcolata con pressione e temperatura reali."
+    },
+    {
+      type: "02 · ATMOSFERA",
+      title: "Dalla quota indicata alla quota vera",
+      question: "Un altimetro calibrato in atmosfera standard indica 8.000 m. Al livello dell’aeroporto p₀ = 105.000 Pa e T₀ = 25 °C. Con gradiente 6,5 °C/km, qual è la quota vera?",
+      data: [["Pressione aeroporto", "105.000", "Pa"], ["Temperatura aeroporto", "25", "°C"], ["Quota indicata", "8.000", "m"], ["Gradiente", "0,0065", "K/m"]],
+      theory: "Un altimetro standard converte la pressione in quota ISA. Se la temperatura reale non è quella standard, bisogna ricavare la temperatura in quota dal rapporto di pressioni e poi usare il gradiente termico reale.",
+      guide: [
+        { label: "01 · DATI", title: "Metti tutto in unità assolute", copy: "La temperatura al livello dell’aeroporto è T₀ = 25 + 273,15 = 298,2 K; il gradiente vale k = 0,0065 K/m.", formula: "p₀ = 105.000 Pa · T₀ = 298,2 K · k = 0,0065 K/m" },
+        { label: "02 · ISA", title: "Trova la pressione associata a 8.000 m", copy: "L’altimetro indica la pressione ISA della quota letta. Dal materiale, a 8.000 m corrisponde p ≈ 35.599 Pa.", formula: "p(8.000 m) ≈ 35.599 Pa" },
+        { label: "03 · TEMPERATURA", title: "Inverti la relazione pressione-temperatura", copy: "Il rapporto p/p₀ permette di ricavare la temperatura reale alla quota di volo.", formula: "T = T₀ · (p / p₀)^(1/5,256) = 298,2 · (35.599 / 105.000)^0,1903 = 242,5 K" },
+        { label: "04 · RISULTATO", title: "Applica il gradiente reale", copy: "La differenza tra la temperatura al suolo e quella in quota, divisa per k, fornisce la quota vera.", formula: "zvera = (298,2 − 242,5) / 0,0065 ≈ 8.569 m" }
+      ],
+      kind: "number",
+      unit: "m",
+      expected: 8569,
+      tolerance: 15,
+      equation: "T = 242,5 K → zvera = (298,2 − 242,5) / 0,0065 ≈ 8.569 m",
+      feedback: "Con un giorno caldo e alta pressione, la quota vera può differire dalla quota indicata dall’altimetro standard."
+    },
+    {
+      type: "03 · QFE",
+      title: "QFE: dalla quota indicata alla quota sul MSL",
+      question: "La pista è a 1.000 m con p₁ = 85.000 Pa e T₁ = 15 °C. L’altimetro è regolato QFE e indica 9.000 m in crociera. Qual è la quota vera sul livello del mare?",
+      data: [["Quota pista", "1.000", "m"], ["Pressione pista", "85.000", "Pa"], ["Temperatura pista", "15", "°C"], ["Quota indicata QFE", "9.000", "m"]],
+      theory: "Con QFE l’altimetro legge zero sulla pista. Per ricostruire la quota vera bisogna prima riportare la pressione di 85.000 Pa al datum ISA, poi ricavare pressione e temperatura alla quota indicata e infine aggiungere la quota vera della pista.",
+      guide: [
+        { label: "01 · QFE", title: "Riconosci il datum", copy: "La lettura zero a 85.000 Pa non corrisponde al livello del mare: la pressione di riferimento va trasformata nella quota ISA equivalente.", formula: "zrif = (288,15 / 0,0065) · [1 − (85.000 / 101.325)^0,1903] ≈ 1.457 m" },
+        { label: "02 · PRESSIONE", title: "Ricava p₂ dalla lettura QFE", copy: "La quota indicata di 9.000 m si somma al datum equivalente di 1.457 m nella relazione barometrica standard.", formula: "p₂ = 101.325 · [1 − (0,0065 / 288,15) · (9.000 + 1.457)]^5,256 ≈ 24.637 Pa" },
+        { label: "03 · TEMPERATURA", title: "Ricava la temperatura in quota", copy: "Usa il rapporto p₂/p₁, perché il riferimento termico è la temperatura reale della pista.", formula: "T₂ = 288,15 · (24.637 / 85.000)^0,1903 ≈ 227,66 K" },
+        { label: "04 · RISULTATO", title: "Calcola quota vera e quota MSL", copy: "La salita vera sopra la pista è (T₁ − T₂)/k. Poi si aggiungono i 1.000 m della pista rispetto al livello del mare.", formula: "zvera,pista ≈ 9.306 m → zvera,MSL ≈ 9.306 + 1.000 = 10.306 m" }
+      ],
+      kind: "number",
+      unit: "m",
+      expected: 10306,
+      tolerance: 20,
+      equation: "zvera,pista ≈ 9.306 m → zvera,MSL ≈ 10.306 m",
+      feedback: "Il QFE azzera l’altimetro sulla pista: la quota indicata è riferita al campo, non direttamente al livello medio del mare."
+    }
+  ]);
 
   const $ = (id) => document.getElementById(id);
   const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -41,12 +142,12 @@
     scenePressureLabel: $("scene-pressure-label"), sceneSettingNote: $("scene-setting-note"), sceneStatus: $("scene-status"),
     altimeterGauge: $("altimeter-gauge"), altimeterTicks: $("altimeter-ticks"), altimeterLongNeedle: $("altimeter-long-needle"), altimeterShortNeedle: $("altimeter-short-needle"),
     altimeterGaugeValue: $("altimeter-gauge-value"), altimeterTag: $("altimeter-tag"), altimeterReading: $("altimeter-reading"), altimeterSettingReadout: $("altimeter-setting-readout"), altimeterNote: $("altimeter-note"),
-    airspeedGauge: $("airspeed-gauge"), airspeedTicks: $("airspeed-ticks"), airspeedNeedle: $("airspeed-needle"), airspeedGaugeValue: $("airspeed-gauge-value"), airspeedReading: $("airspeed-reading"), airspeedTasReading: $("airspeed-tas-reading"), machReading: $("mach-reading"), airspeedNote: $("airspeed-note"),
+    airspeedGauge: $("airspeed-gauge"), airspeedTicks: $("airspeed-ticks"), airspeedNeedle: $("airspeed-needle"), airspeedGaugeValue: $("airspeed-gauge-value"), airspeedReading: $("airspeed-reading"), airspeedTasReading: $("airspeed-tas-reading"), machReading: $("mach-reading"), airspeedNote: $("airspeed-note"), airspeedWhiteArc: $("airspeed-white-arc"), airspeedGreenArc: $("airspeed-green-arc"), airspeedYellowArc: $("airspeed-yellow-arc"), airspeedVneLine: $("airspeed-vne-line"),
     vsiTicks: $("vsi-ticks"), vsiNeedle: $("vsi-needle"), vsiGaugeValue: $("vsi-gauge-value"), vsiReading: $("vsi-reading"), vsiGauge: $("vsi-gauge"),
     psReadout: $("ps-readout"), qReadout: $("q-readout"), casReadout: $("cas-readout"), easReadout: $("eas-readout"), tasReadout: $("tas-readout"),
     liveExplanation: $("live-explanation"),
-    guidedCheck: $("guided-check"), guidedFeedback: $("guided-feedback"),
-    challengeCheck: $("challenge-check"), challengeFeedback: $("challenge-feedback"), challengeReset: $("challenge-reset"), challengeStatus: $("challenge-status")
+    theoryStage: $("theory-stage"), theoryStageMode: $("theory-stage-mode"), theoryStageNote: $("theory-stage-note"), theoryStepLabel: $("theory-step-label"), theoryKicker: $("theory-kicker"), theoryTitle: $("theory-title"), theoryCopy: $("theory-copy"), theoryEquation: $("theory-equation"), theoryPtReadout: $("theory-pt-readout"), theoryPsReadout: $("theory-ps-readout"), theoryQReadout: $("theory-q-readout"), theoryQFormula: $("theory-q-formula"), theorySpeedFormula: $("theory-speed-formula"), theoryIasFormula: $("theory-ias-formula"), theoryDerivationNote: $("theory-derivation-note"), theoryAneroidMotion: $("theory-aneroid-motion"), theoryCutawayNeedle: $("theory-cutaway-needle"), theoryCutawayPressure: $("theory-cutaway-pressure"), theoryCutawayAltitude: $("theory-cutaway-altitude"), theoryCutawayState: $("theory-cutaway-state"),
+    exerciseProgress: $("exercise-progress"), exerciseScore: $("exercise-score"), exerciseType: $("exercise-type"), exerciseState: $("exercise-state"), exerciseTitle: $("exercise-title"), exerciseQuestion: $("exercise-question"), exerciseData: $("exercise-data"), exerciseTheory: $("exercise-theory"), exerciseGuide: $("exercise-guide"), exerciseGuideProgress: $("exercise-guide-progress"), exerciseGuideNext: $("exercise-guide-next"), exerciseAnswerArea: $("exercise-answer-area"), exerciseSubmit: $("exercise-submit"), exerciseFeedback: $("exercise-feedback"), exerciseNext: $("exercise-next")
   };
 
   function formatNumber(value, decimals) {
@@ -218,11 +319,35 @@
     element.setAttribute("y2", y2.toFixed(3));
   }
 
+  function gaugeArcPath(startValue, endValue, maxValue, radius) {
+    const startAngle = -135 + (startValue / maxValue) * 270;
+    const endAngle = -135 + (endValue / maxValue) * 270;
+    const start = polarPoint(120, 120, radius, startAngle);
+    const end = polarPoint(120, 120, radius, endAngle);
+    const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+    return `M${start.x.toFixed(2)} ${start.y.toFixed(2)} A${radius} ${radius} 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
+  }
+
+  function renderAirspeedBands() {
+    const scaleMax = 200;
+    if (els.airspeedWhiteArc) els.airspeedWhiteArc.setAttribute("d", gaugeArcPath(40, 85, scaleMax, 94));
+    if (els.airspeedGreenArc) els.airspeedGreenArc.setAttribute("d", gaugeArcPath(48, 129, scaleMax, 94));
+    if (els.airspeedYellowArc) els.airspeedYellowArc.setAttribute("d", gaugeArcPath(129, 163, scaleMax, 94));
+    if (els.airspeedVneLine) {
+      const angle = -135 + (163 / scaleMax) * 270;
+      const inner = polarPoint(120, 120, 82, angle);
+      const outer = polarPoint(120, 120, 98, angle);
+      els.airspeedVneLine.setAttribute("x1", inner.x.toFixed(2));
+      els.airspeedVneLine.setAttribute("y1", inner.y.toFixed(2));
+      els.airspeedVneLine.setAttribute("x2", outer.x.toFixed(2));
+      els.airspeedVneLine.setAttribute("y2", outer.y.toFixed(2));
+    }
+  }
+
   function renderAltimeter(data) {
     const indication = data.indicatedAltitudeFt;
     const longAngle = ((indication % 10000) + 10000) % 10000 / 10000 * 360;
     const shortAngle = ((indication % 100000) + 100000) % 100000 / 100000 * 360;
-    setNeedleGeometry(els.altimeterLongNeedle, longAngle, 85);
     setNeedleGeometry(els.altimeterShortNeedle, shortAngle, 56);
     setText(els.altimeterGaugeValue, formatNumber(Math.round(indication), 0));
     setText(els.altimeterReading, formatFeet(indication));
@@ -233,9 +358,49 @@
     els.altimeterGauge.setAttribute("aria-label", `Altimetro: ${formatFeet(indication)}, setting ${state.settingMode.toUpperCase()} ${formatNumber(state.settingPressureHpa, 2)} hPa`);
   }
 
+  function animateTheoryMechanism(capsuleScale, needleAngle) {
+    if (!els.theoryAneroidMotion || !els.theoryCutawayNeedle || !els.altimeterLongNeedle) return;
+    if (theoryMotion.frameId !== null) window.cancelAnimationFrame(theoryMotion.frameId);
+
+    const startScale = theoryMotion.initialized ? theoryMotion.capsuleScale : capsuleScale;
+    const startAngle = theoryMotion.initialized ? theoryMotion.needleAngle : needleAngle;
+    let targetAngle = needleAngle;
+    while (targetAngle - startAngle > 180) targetAngle -= 360;
+    while (targetAngle - startAngle < -180) targetAngle += 360;
+    const duration = theoryMotion.initialized ? 420 : 0;
+    const startedAt = window.performance.now();
+
+    const draw = (progress) => {
+      const eased = progress < 0.5
+        ? 2 * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      const scale = startScale + (capsuleScale - startScale) * eased;
+      const angle = startAngle + (targetAngle - startAngle) * eased;
+      theoryMotion.capsuleScale = scale;
+      theoryMotion.needleAngle = angle;
+      theoryMotion.initialized = true;
+      els.theoryAneroidMotion.setAttribute("transform", `translate(220 133) scale(1 ${scale.toFixed(4)}) translate(-220 -133)`);
+      els.theoryCutawayNeedle.setAttribute("transform", `rotate(${angle.toFixed(2)} 404 170)`);
+      setNeedleGeometry(els.altimeterLongNeedle, angle, 85);
+    };
+
+    if (!duration) {
+      draw(1);
+      theoryMotion.frameId = null;
+      return;
+    }
+    const tick = (now) => {
+      const progress = model.clamp((now - startedAt) / duration, 0, 1);
+      draw(progress);
+      if (progress < 1) theoryMotion.frameId = window.requestAnimationFrame(tick);
+      else theoryMotion.frameId = null;
+    };
+    theoryMotion.frameId = window.requestAnimationFrame(tick);
+  }
+
   function renderAirspeed(data) {
     const airspeed = data.airspeed;
-    const speedAngle = -135 + model.clamp(airspeed.iasKnots / 400, 0, 1) * 270;
+    const speedAngle = -135 + model.clamp(airspeed.iasKnots / 200, 0, 1) * 270;
     setNeedleGeometry(els.airspeedNeedle, speedAngle, 87);
     setText(els.airspeedGaugeValue, formatNumber(Math.max(0, airspeed.iasKnots), 0));
     setText(els.airspeedReading, formatKnots(airspeed.iasKnots));
@@ -277,7 +442,7 @@
 
   function render() {
     const data = computeData();
-    renderScene(data); renderAltimeter(data); renderAirspeed(data); renderVsi(); renderExplanation(data);
+    renderScene(data); renderAltimeter(data); renderAirspeed(data); renderVsi(); renderTheoryPhysics(data); renderExplanation(data);
     setText(els.altitudeOutput, formatFeet(state.altitudeFt)); setText(els.tasOutput, formatKnots(state.tasKnots));
     setText(els.positionErrorOutput, `${state.positionErrorKnots >= 0 ? "+" : ""}${formatNumber(state.positionErrorKnots, 1)} kt`);
     setText(els.verticalSpeedOutput, `${state.verticalSpeedFpm > 0 ? "+" : ""}${formatNumber(state.verticalSpeedFpm, 0)} fpm`);
@@ -341,56 +506,217 @@
       const active = panel.id === `mode-${mode}`;
       panel.hidden = !active; panel.classList.toggle("is-active", active);
     });
+    if (mode === "cockpit") {
+      window.requestAnimationFrame(() => $("mode-cockpit")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
   }
 
-  function checkGuided() {
-    const choice = document.querySelector("input[name='guided-answer']:checked");
-    if (!choice) return;
-    els.guidedFeedback.hidden = false;
-    els.guidedFeedback.textContent = choice.value === "ps"
-      ? "Corretto: l’altimetro legge la pressione statica Pₛ. Il Pitot misura Pₜ; la differenza Pₜ − Pₛ è la pressione dinamica usata dall’anemometro."
-      : "Non ancora: l’altimetro è collegato alle prese statiche e usa Pₛ. Pₜ arriva dal Pitot, mentre q è la differenza tra totale e statica.";
-    els.guidedFeedback.style.background = choice.value === "ps" ? "#eaf7f5" : "#fff8ec";
+  function renderTheoryStep(step = state.theoryStep) {
+    const lesson = THEORY_STEPS[step] || THEORY_STEPS.pitot;
+    state.theoryStep = THEORY_STEPS[step] ? step : "pitot";
+    els.theoryStage.dataset.theoryStep = state.theoryStep;
+    const theoryCard = els.theoryStage.closest(".theory-card");
+    if (theoryCard) theoryCard.dataset.theoryStep = state.theoryStep;
+    setText(els.theoryStageMode, lesson.mode);
+    setText(els.theoryStageNote, lesson.note);
+    setText(els.theoryStepLabel, lesson.label);
+    const progressBar = document.querySelector(".theory-progress b");
+    if (progressBar) progressBar.style.width = `${(Object.keys(THEORY_STEPS).indexOf(state.theoryStep) + 1) / Object.keys(THEORY_STEPS).length * 100}%`;
+    setText(els.theoryKicker, lesson.kicker);
+    setText(els.theoryTitle, lesson.title);
+    els.theoryCopy.innerHTML = lesson.copy
+      .replace(/Pₜ/g, "P<sub>t</sub>")
+      .replace(/Pₛ/g, "P<sub>s</sub>")
+      .replace(/\bPt\b/g, "P<sub>t</sub>")
+      .replace(/\bPs\b/g, "P<sub>s</sub>");
+    els.theoryEquation.innerHTML = lesson.equation
+      .replace(/Pₜ/g, "P<sub>t</sub>")
+      .replace(/Pₛ/g, "P<sub>s</sub>")
+      .replace(/Pt/g, "P<sub>t</sub>")
+      .replace(/Ps/g, "P<sub>s</sub>");
+    $$(".theory-step").forEach((button) => {
+      const active = button.dataset.theoryStep === state.theoryStep;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
   }
 
-  function checkChallenge() {
-    const choice = document.querySelector("input[name='challenge-setting']:checked");
-    if (!choice) return;
-    state.challengeChoice = choice.value; state.challengeAnswered = true;
-    applyPreset(choice.value);
-    const airportQfeHpa = model.paToHpa(getPresetPressure("qfe"));
-    const qfeReading = model.indicatedAltitudeFt(getPresetPressure("qfe"), getPresetPressure("qfe"));
-    const qnhReading = model.indicatedAltitudeFt(getPresetPressure("qfe"), getPresetPressure("qnh"));
-    const stdReading = model.indicatedAltitudeFt(getPresetPressure("qfe"), getPresetPressure("std"));
-    const isCorrect = choice.value === "qfe";
-    els.challengeFeedback.hidden = false; els.challengeFeedback.classList.toggle("is-wrong", !isCorrect);
-    els.challengeFeedback.innerHTML = isCorrect
-      ? `<strong>Scelta corretta: QFE.</strong> Il setting QFE usa la pressione della stazione di riferimento (qui circa ${formatNumber(airportQfeHpa, 2)} hPa), quindi sulla pista l’altimetro indica ${formatFeet(qfeReading)}. Questa è la <strong>height</strong>: distanza verticale dalla pista/stazione. La <strong>altitude</strong> è invece riferita al MSL e sulla pista vale ${formatFeet(qnhReading)}.`
-      : `<strong>Rivedi il datum.</strong> ${choice.value.toUpperCase()} non porta la pista a zero in questo scenario: sulla pista indica circa ${formatFeet(choice.value === "qnh" ? qnhReading : stdReading)}. Per leggere 0 ft rispetto alla pista serve QFE, perché QFE misura la <strong>height</strong>; l’altitudine resta riferita al MSL.`;
-    els.challengeStatus.textContent = isCorrect ? "VERIFICATO" : "OSSERVA";
-    els.challengeStatus.style.background = isCorrect ? "#e8f7f3" : "#fff0da";
-    els.challengeCheck.disabled = true; els.challengeReset.hidden = false;
-    $$(`#challenge-choices input`).forEach((input) => { input.disabled = true; });
-    render();
+  function renderTheoryPhysics(data) {
+    const airspeed = data.airspeed;
+    const staticPressurePa = data.sensorStaticPressurePa;
+    const dynamicPressurePa = airspeed.measuredDynamicPressurePa;
+    const density = Math.max(airspeed.densityKgM3, 0.001);
+    const incompressibleSpeedKnots = model.mpsToKnots(Math.sqrt((2 * dynamicPressurePa) / density));
+    const positionErrorLabel = airspeed.positionErrorKnots >= 0
+      ? `+${formatNumber(airspeed.positionErrorKnots, 1)}`
+      : formatNumber(airspeed.positionErrorKnots, 1);
+    const referenceSeaLevelPa = model.hpaToPa(CONFIG.scenarioQnhHpa);
+    const pressureDrop = model.clamp(1 - staticPressurePa / referenceSeaLevelPa, 0, 0.7);
+    const capsuleScale = 1 + pressureDrop * 0.75;
+    const altitudeDelta = state.altitudeFt - state.theoryPreviousAltitudeFt;
+    const motionState = state.staticBlocked
+      ? "PRESA BLOCCATA"
+      : Math.abs(altitudeDelta) < 1
+        ? "QUOTA STABILIZZATA"
+        : altitudeDelta > 0
+          ? "SALITA · Ps ↓"
+          : "DISCESA · Ps ↑";
+
+    setText(els.theoryPtReadout, `${formatNumber(airspeed.totalPressurePa, 0)} Pa`);
+    setText(els.theoryPsReadout, `${formatNumber(staticPressurePa, 0)} Pa`);
+    setText(els.theoryQReadout, `${formatNumber(dynamicPressurePa, 0)} Pa`);
+    els.theoryQFormula.innerHTML = `q = P<sub>t</sub> − P<sub>s</sub> = ${formatNumber(dynamicPressurePa, 0)} Pa`;
+    els.theorySpeedFormula.innerHTML = `V ≈ √(2q / ρ) = ${formatNumber(incompressibleSpeedKnots, 1)} kt · ρ ${formatNumber(density, 3)} kg/m³`;
+    els.theoryIasFormula.innerHTML = `IAS = CAS − e<sub>pos</sub> = ${formatKnots(airspeed.casKnots)} − (${positionErrorLabel} kt) = ${formatKnots(airspeed.iasKnots)}`;
+    setText(els.theoryDerivationNote, state.staticBlocked
+      ? "La presa statica è bloccata: il sensore conserva Ps, mentre Pt continua a variare. Il differenziale e la lettura possono quindi diventare anomali."
+      : "V ≈ √(2q / ρ) è la forma incomprimibile: ρ è la densità dell’aria. Il modello live usa inoltre la relazione comprimibile per Pt e la densità standard ρ₀ per la CAS.");
+
+    const altimeterTurn = (((data.indicatedAltitudeFt % 10000) + 10000) % 10000) / 10000 * 360;
+    animateTheoryMechanism(capsuleScale, altimeterTurn);
+    setText(els.theoryCutawayPressure, `Ps cassa: ${formatNumber(model.paToHpa(staticPressurePa), 1)} hPa`);
+    setText(els.theoryCutawayAltitude, formatFeet(data.indicatedAltitudeFt));
+    setText(els.theoryCutawayState, motionState);
+    state.theoryPreviousAltitudeFt = state.altitudeFt;
   }
 
-  function resetChallenge() {
-    state.challengeChoice = null; state.challengeAnswered = false; applyPreset("qnh");
-    $$(`#challenge-choices input`).forEach((input) => { input.disabled = false; input.checked = false; });
-    els.challengeFeedback.hidden = true; els.challengeFeedback.className = "challenge-feedback"; els.challengeReset.hidden = true; els.challengeCheck.disabled = true; els.challengeStatus.textContent = "PREDICI"; els.challengeStatus.style.background = "#fff0da";
+  function exerciseExpected(exercise) {
+    return typeof exercise.expected === "function" ? exercise.expected() : exercise.expected;
+  }
+
+  function renderExerciseGuide() {
+    const exercise = EXERCISES[state.exerciseIndex];
+    if (!exercise || !exercise.guide || !els.exerciseGuide) return;
+    const totalSteps = exercise.guide.length;
+    const visibleSteps = model.clamp(state.exerciseGuideStep, 1, totalSteps);
+    state.exerciseGuideStep = visibleSteps;
+    if (els.exerciseTheory) {
+      els.exerciseTheory.innerHTML = `<strong>Richiamo teorico</strong><p>${exercise.theory}</p>`;
+    }
+    els.exerciseGuide.innerHTML = exercise.guide.map((step, index) => `
+      <article class="exercise-guide-step"${index < visibleSteps ? "" : " hidden"}>
+        <div class="exercise-guide-index">${String(index + 1).padStart(2, "0")}</div>
+        <div><span>${step.label}</span><h4>${step.title}</h4><p>${step.copy}</p><code>${step.formula}</code></div>
+      </article>
+    `).join("");
+    setText(els.exerciseGuideProgress, `PASSO ${String(visibleSteps).padStart(2, "0")} / ${String(totalSteps).padStart(2, "0")}`);
+    const complete = visibleSteps >= totalSteps;
+    els.exerciseGuideNext.hidden = complete;
+    els.exerciseGuideNext.textContent = complete ? "Svolgimento completo" : `Mostra passo ${String(visibleSteps + 1).padStart(2, "0")} →`;
+  }
+
+  function nextExerciseGuideStep() {
+    const exercise = EXERCISES[state.exerciseIndex];
+    if (!exercise || state.exerciseGuideStep >= exercise.guide.length) return;
+    state.exerciseGuideStep += 1;
+    renderExerciseGuide();
+  }
+
+  function renderExercise() {
+    const exercise = EXERCISES[state.exerciseIndex];
+    if (!exercise) return;
+    state.exerciseAnswered = false;
+    state.exerciseGuideStep = 1;
+    setText(els.exerciseProgress, `${String(state.exerciseIndex + 1).padStart(2, "0")} / ${String(EXERCISES.length).padStart(2, "0")}`);
+    setText(els.exerciseScore, state.exerciseScore);
+    setText(els.exerciseType, exercise.type);
+    setText(els.exerciseState, "IN ATTESA");
+    els.exerciseState.classList.remove("is-correct", "is-wrong");
+    setText(els.exerciseTitle, exercise.title);
+    setText(els.exerciseQuestion, exercise.question);
+    els.exerciseData.innerHTML = exercise.data.map(([label, value, unit]) => `
+      <div><span>${label}</span><strong>${value}</strong><small>${unit}</small></div>
+    `).join("");
+    renderExerciseGuide();
+
+    if (exercise.kind === "choice") {
+      els.exerciseAnswerArea.innerHTML = `
+        <fieldset class="exercise-options">
+          <legend>Scegli una sequenza</legend>
+          ${exercise.options.map(([value, label, note]) => `
+            <label><input type="radio" name="exercise-answer" value="${value}"><span><b>${value.toUpperCase()}</b><strong>${label}</strong><small>${note}</small></span></label>
+          `).join("")}
+        </fieldset>
+      `;
+      $$('input[name="exercise-answer"]').forEach((input) => input.addEventListener("change", () => {
+        els.exerciseSubmit.disabled = false;
+      }));
+    } else {
+      els.exerciseAnswerArea.innerHTML = `
+        <label class="exercise-number-entry" for="exercise-answer"><span>Risposta</span><div><input id="exercise-answer" type="number" inputmode="decimal" step="any" aria-label="Risposta esercizio"><b>${exercise.unit}</b></div></label>
+      `;
+      $("exercise-answer").addEventListener("input", (event) => {
+        els.exerciseSubmit.disabled = event.target.value.trim() === "";
+      });
+    }
+    els.exerciseFeedback.hidden = true;
+    els.exerciseFeedback.className = "exercise-feedback";
+    els.exerciseNext.hidden = true;
+    els.exerciseNext.textContent = state.exerciseIndex === EXERCISES.length - 1 ? "Ricomincia esercizi ↺" : "Prossimo esercizio →";
+    els.exerciseSubmit.disabled = true;
+  }
+
+  function checkExercise() {
+    if (state.exerciseAnswered) return;
+    const exercise = EXERCISES[state.exerciseIndex];
+    let answer;
+    if (exercise.kind === "choice") {
+      answer = document.querySelector('input[name="exercise-answer"]:checked')?.value;
+      if (!answer) return;
+    } else {
+      answer = Number($("exercise-answer")?.value);
+      if (!Number.isFinite(answer)) return;
+    }
+
+    const expected = exerciseExpected(exercise);
+    const correct = exercise.kind === "choice"
+      ? answer === expected
+      : Math.abs(answer - expected) <= exercise.tolerance;
+    state.exerciseAnswered = true;
+    state.exerciseGuideStep = exercise.guide.length;
+    renderExerciseGuide();
+    if (correct) state.exerciseScore += 1;
+    setText(els.exerciseScore, state.exerciseScore);
+    setText(els.exerciseState, correct ? "CORRETTA" : "DA RIVEDERE");
+    els.exerciseState.classList.toggle("is-correct", correct);
+    els.exerciseState.classList.toggle("is-wrong", !correct);
+    els.exerciseFeedback.hidden = false;
+    els.exerciseFeedback.classList.toggle("is-correct", correct);
+    els.exerciseFeedback.classList.toggle("is-wrong", !correct);
+    const expectedText = exercise.kind === "choice"
+      ? ""
+      : `<span>Risposta attesa: <strong>${formatNumber(expected, Number.isInteger(expected) ? 0 : 1)} ${exercise.unit}</strong></span><br>`;
+    els.exerciseFeedback.innerHTML = correct
+      ? `<strong>Corretto.</strong> ${exercise.feedback}<br><code>${exercise.equation}</code>`
+      : `<strong>Rivedi il passaggio.</strong> ${exercise.feedback}<br>${expectedText}<code>${exercise.equation}</code>`;
+    $$('input[name="exercise-answer"], #exercise-answer').forEach((input) => { input.disabled = true; });
+    els.exerciseSubmit.disabled = true;
+    els.exerciseNext.hidden = false;
+  }
+
+  function nextExercise() {
+    const lastExercise = state.exerciseIndex === EXERCISES.length - 1;
+    if (lastExercise) {
+      state.exerciseIndex = 0;
+      state.exerciseScore = 0;
+    } else {
+      state.exerciseIndex += 1;
+    }
+    renderExercise();
   }
 
   function resetLab() {
-    stopFlight(); state.altitudeFt = 2000; state.tasKnots = 180; state.positionErrorKnots = 0; state.verticalSpeedFpm = 0; state.staticBlocked = false; state.blockedPressurePa = null; state.settingMode = "qnh"; state.settingPressureHpa = CONFIG.scenarioQnhHpa;
+    stopFlight(); state.altitudeFt = 2000; state.theoryPreviousAltitudeFt = 2000; state.tasKnots = 110; state.positionErrorKnots = 0; state.verticalSpeedFpm = 0; state.staticBlocked = false; state.blockedPressurePa = null; state.settingMode = "qnh"; state.settingPressureHpa = CONFIG.scenarioQnhHpa;
     els.staticBlockage.checked = false; applyPreset("qnh"); render();
   }
 
   function bindEvents() {
     $$(".mode-tab").forEach((tab) => tab.addEventListener("click", () => onModeChange(tab.dataset.mode)));
+    $$(".theory-step").forEach((button) => button.addEventListener("click", () => renderTheoryStep(button.dataset.theoryStep)));
     els.altitudeRange.addEventListener("input", (event) => setNumericState("altitudeFt", event.target.value, 0, 36000, 100));
     els.altitudeNumber.addEventListener("change", (event) => setNumericState("altitudeFt", event.target.value, 0, 36000, 100));
-    els.tasRange.addEventListener("input", (event) => setNumericState("tasKnots", event.target.value, 40, 420, 1));
-    els.tasNumber.addEventListener("change", (event) => setNumericState("tasKnots", event.target.value, 40, 420, 1));
+    els.tasRange.addEventListener("input", (event) => setNumericState("tasKnots", event.target.value, 40, 180, 1));
+    els.tasNumber.addEventListener("change", (event) => setNumericState("tasKnots", event.target.value, 40, 180, 1));
     els.positionErrorRange.addEventListener("input", (event) => setNumericState("positionErrorKnots", event.target.value, -5, 10, .5));
     els.verticalSpeedRange.addEventListener("input", (event) => setNumericState("verticalSpeedFpm", event.target.value, -3000, 3000, 100));
     els.settingPreset.addEventListener("change", (event) => { applyPreset(event.target.value); render(); });
@@ -398,16 +724,18 @@
     els.staticBlockage.addEventListener("change", updateStaticBlockage);
     els.flightToggle.addEventListener("click", toggleFlight);
     els.resetLab.addEventListener("click", resetLab);
-    els.guidedCheck.addEventListener("click", checkGuided);
-    $$('input[name="guided-answer"]').forEach((input) => input.addEventListener("change", () => { els.guidedCheck.disabled = false; }));
-    $$('input[name="challenge-setting"]').forEach((input) => input.addEventListener("change", () => { state.challengeChoice = input.value; els.challengeCheck.disabled = false; }));
-    els.challengeCheck.addEventListener("click", checkChallenge); els.challengeReset.addEventListener("click", resetChallenge);
+    els.exerciseSubmit.addEventListener("click", checkExercise);
+    els.exerciseGuideNext.addEventListener("click", nextExerciseGuideStep);
+    els.exerciseNext.addEventListener("click", nextExercise);
   }
 
   createSceneTicks();
   createGaugeTicks(els.altimeterTicks, 10, 1, 1, 0, 324, 1);
-  createGaugeTicks(els.airspeedTicks, 400, 40, 80, -135, 135, 80);
+  createGaugeTicks(els.airspeedTicks, 200, 10, 20, -135, 135, 20);
+  renderAirspeedBands();
   createVsiTicks();
+  renderTheoryStep();
+  renderExercise();
   updateSettingHelp(); bindEvents(); render();
 }());
 

@@ -9,11 +9,14 @@ Costruisci o aggiorna la web app statica responsive **Air Data Lab** nel workspa
 ## REQUIREMENTS
 - HTML/CSS/JavaScript client-side; nessun backend.
 - Nessuna API key o segreto.
-- Modalità Guided, Explore e Challenge.
+- Modalità Cockpit, Teoria ed Esercizi.
+- Il Cockpit deve essere il primo pannello, con comandi e strumenti visibili nello stesso contesto responsive.
+- La Teoria deve spiegare con animazioni il sistema Pitot/statico, la misura della velocità e la capsula aneroide.
+- Gli Esercizi devono proporre problemi sulla misura della velocità con verifica e feedback.
 - Moduli pitot-statico, IAS/CAS/EAS/TAS e altimetria QNH/QFE/STD.
 - Ciclo PREDICI → INTERAGISCI → OSSERVA → SPIEGA → VERIFICA dove previsto.
 - Responsive e accessibile.
-- Test semplici per le funzioni numeriche e per il challenge QFE.
+- Test semplici per le funzioni numeriche e per gli esercizi di misura della velocità.
 - README con avvio locale, struttura e istruzioni di deployment statico.
 
 ## INSTRUCTIONS

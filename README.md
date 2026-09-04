@@ -19,8 +19,10 @@ In alternativa è possibile usare qualsiasi server statico. L’apertura diretta
 - `index.html` — struttura semantica, controlli, scena e strumenti SVG.
 - `style.css` — layout responsive, accessibilità visiva e stile degli strumenti.
 - `air-data-model.js` — funzioni numeriche pure, riutilizzabili e testabili.
-- `app.js` — stato dell’interazione, rendering live, modalità didattiche e challenge QFE.
+- `app.js` — stato dell’interazione, rendering live, teoria animata ed esercizi sulla misura della velocità.
 - `tests/app.test.js` — test numerici ISA, catena pitot-statico, QFE e blocco statico.
+
+Le modalità sono tre: Cockpit (pannello live C172), Teoria (schema animato del sistema Pitot/static, derivazione `Pt − Ps = q → V`, spaccato dell’altimetro e capsula aneroide sincronizzata con la quota) ed Esercizi (cinque problemi progressivi sulla catena Pt–Ps, CAS–IAS, EAS–TAS e sul modello ISA).
 
 Il cockpit consente di cambiare TAS e osservare la lancetta IAS/CAS in movimento. Il variometro permette di impostare un rateo di salita o discesa e avviare una simulazione temporale: l’aeromobile e le quote nella scena si spostano mentre pressione e strumenti vengono ricalcolati.
 

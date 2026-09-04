@@ -46,67 +46,164 @@
     </section>
 
     <nav class="mode-switch section-wrap" aria-label="Modalità del laboratorio" role="tablist">
-      <button class="mode-tab is-active" id="tab-guided" type="button" role="tab" aria-selected="true" aria-controls="mode-guided" data-mode="guided">
-        <span class="tab-number">01</span><span><strong>Guided</strong><small>capisci il principio</small></span>
+      <button class="mode-tab is-active" id="tab-cockpit" type="button" role="tab" aria-selected="true" aria-controls="mode-cockpit" data-mode="cockpit">
+        <span class="tab-number">01</span><span><strong>Cockpit</strong><small>pannello live C172</small></span>
       </button>
-      <button class="mode-tab" id="tab-explore" type="button" role="tab" aria-selected="false" aria-controls="mode-explore" data-mode="explore" tabindex="-1">
-        <span class="tab-number">02</span><span><strong>Explore</strong><small>muovi i parametri</small></span>
+      <button class="mode-tab" id="tab-theory" type="button" role="tab" aria-selected="false" aria-controls="mode-theory" data-mode="theory" tabindex="-1">
+        <span class="tab-number">02</span><span><strong>Teoria</strong><small>segui il sistema</small></span>
       </button>
-      <button class="mode-tab" id="tab-challenge" type="button" role="tab" aria-selected="false" aria-controls="mode-challenge" data-mode="challenge" tabindex="-1">
-        <span class="tab-number">03</span><span><strong>Challenge</strong><small>prendi una decisione</small></span>
+      <button class="mode-tab" id="tab-exercises" type="button" role="tab" aria-selected="false" aria-controls="mode-exercises" data-mode="exercises" tabindex="-1">
+        <span class="tab-number">03</span><span><strong>Esercizi</strong><small>misura la velocità</small></span>
       </button>
     </nav>
 
-    <section class="mode-panel section-wrap is-active" id="mode-guided" role="tabpanel" aria-labelledby="tab-guided">
-      <div>
-        <p class="eyebrow">GUIDED / checkpoint</p>
-        <h2>Prima individua la pressione.</h2>
-        <p>Il sistema dati aria separa pressione totale e pressione statica. L’altimetro usa la pressione statica; il tubo di Pitot porta la pressione di ristagno all’anemometro.</p>
+    <section class="mode-panel section-wrap theory-panel" id="mode-theory" role="tabpanel" aria-labelledby="tab-theory" hidden>
+      <div class="theory-intro">
+        <p class="eyebrow">TEORIA / SISTEMA DATI ARIA</p>
+        <h2>Segui la pressione fino allo strumento.</h2>
+        <p>Seleziona una fase del sistema. L’animazione evidenzia il percorso della pressione e la spiegazione collega il fenomeno fisico alla lettura del cockpit.</p>
+        <div class="theory-progress"><span id="theory-step-label">01 / 03 · PRESSIONI</span><i><b></b></i></div>
       </div>
-      <div class="checkpoint card" id="guided-checkpoint">
-        <p class="checkpoint-label">Prediction checkpoint</p>
-        <p class="checkpoint-question">Quale pressione usa direttamente l’altimetro?</p>
-        <div class="choice-row" role="group" aria-label="Risposta al checkpoint guidato">
-          <label><input type="radio" name="guided-answer" value="pt"> <span><b>P<sub>t</sub></b><small>totale</small></span></label>
-          <label><input type="radio" name="guided-answer" value="ps"> <span><b>P<sub>s</sub></b></span><small>statica</small></label>
-          <label><input type="radio" name="guided-answer" value="q"> <span><b>q</b><small>dinamica</small></span></label>
+      <div class="theory-card card">
+        <div class="theory-card-heading"><span class="theory-live-dot"></span><strong>SCHEMA ANIMATO · PITOT / STATIC</strong><span id="theory-stage-mode">PITOT-STATIC</span></div>
+        <div class="theory-stage" id="theory-stage" data-theory-step="pitot">
+          <svg class="theory-schematic" viewBox="0 0 820 400" role="img" aria-labelledby="theory-diagram-title theory-diagram-desc">
+            <title id="theory-diagram-title">Schema animato del sistema pitot-statico</title>
+            <desc id="theory-diagram-desc">Tubo di Pitot e prese statiche alimentano anemometro e altimetro attraverso pressione totale, statica e dinamica.</desc>
+            <defs>
+              <linearGradient id="theory-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#17344b"></stop><stop offset="1" stop-color="#0a1721"></stop></linearGradient>
+              <marker id="theory-arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#69d2d0"></path></marker>
+              <marker id="theory-arrow-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f5a24c"></path></marker>
+            </defs>
+            <rect class="theory-schematic-bg" x="0" y="0" width="820" height="400" rx="18"></rect>
+            <path class="theory-grid-line" d="M0 80H820M0 160H820M0 240H820M0 320H820M164 0V400M328 0V400M492 0V400M656 0V400"></path>
+            <g class="theory-airflow"><path d="M22 78H278M18 112H278M32 146H278M24 180H278M18 214H278M34 248H278M20 282H278" marker-end="url(#theory-arrow-cyan)"></path><circle cx="74" cy="78" r="3"></circle><circle cx="148" cy="146" r="3"></circle><circle cx="106" cy="214" r="3"></circle></g>
+            <g class="theory-aircraft">
+              <image class="theory-aircraft-photo" href="assets/c172s-side-profile.jpg" x="20" y="48" width="335" height="235" preserveAspectRatio="xMidYMid slice" aria-label="Fotografia laterale di un Cessna 172S"></image>
+              <rect class="theory-aircraft-photo-frame" x="20" y="48" width="335" height="235" rx="10"></rect>
+              <circle class="theory-pitot-marker" cx="225" cy="207" r="6"></circle><circle class="theory-pitot-ring" cx="225" cy="207" r="12"></circle>
+              <circle class="theory-static-port port-upper" cx="241" cy="199" r="5"></circle><circle class="theory-static-port port-lower" cx="249" cy="203" r="4"></circle><circle class="theory-static-ring" cx="245" cy="201" r="13"></circle>
+              <text class="aircraft-sensor-label pitot-label" x="202" y="228">PITOT · Pt</text><text class="aircraft-sensor-label static-label" x="70" y="214">STATIC PORTS · Ps (2x)</text><text x="84" y="304">CESSNA 172S · FOTO REALE / VISTA LATERALE</text>
+            </g>
+            <g class="theory-paths">
+              <path class="theory-path path-total" d="M225 207C290 244 350 250 382 220C416 186 402 66 432 66H577" marker-end="url(#theory-arrow-orange)"></path>
+              <path class="theory-path path-static" d="M241 199C260 220 320 254 367 246C409 239 425 218 448 200" marker-end="url(#theory-arrow-cyan)"></path>
+              <path class="theory-path path-static-asi" d="M448 200V86H577" marker-end="url(#theory-arrow-cyan)"></path>
+              <path class="theory-path path-static-alt" d="M448 200H577" marker-end="url(#theory-arrow-cyan)"></path>
+              <path class="theory-path path-static-vsi" d="M448 200V324H577" marker-end="url(#theory-arrow-cyan)"></path>
+              <path class="theory-path path-aneroid" d="M577 200H596" marker-end="url(#theory-arrow-cyan)"></path>
+              <circle class="theory-pressure-particle particle-total" r="4"><animateMotion dur="3.3s" repeatCount="indefinite" path="M225 207C290 244 350 250 382 220C416 186 402 66 432 66H577"></animateMotion></circle>
+              <circle class="theory-pressure-particle particle-static" r="4"><animateMotion dur="2.8s" begin="-.8s" repeatCount="indefinite" path="M241 199C260 220 320 254 367 246C409 239 425 218 448 200"></animateMotion></circle>
+              <circle class="theory-pressure-particle particle-static-asi" r="4"><animateMotion dur="2.4s" begin="-.2s" repeatCount="indefinite" path="M448 200V86H577"></animateMotion></circle>
+              <circle class="theory-pressure-particle particle-static-alt" r="4"><animateMotion dur="2.6s" begin="-.5s" repeatCount="indefinite" path="M448 200H577"></animateMotion></circle>
+              <circle class="theory-pressure-particle particle-static-vsi" r="4"><animateMotion dur="2.8s" begin="-1.3s" repeatCount="indefinite" path="M448 200V324H577"></animateMotion></circle>
+              <text class="theory-line-label theory-line-label-total" x="355" y="61">Pt · TOTALE</text><text class="theory-line-label theory-line-label-static" x="358" y="105">Ps · STATICA</text><text class="theory-manifold-label" x="455" y="220">MANIFOLD</text>
+            </g>
+            <g class="theory-module theory-module-speed"><circle cx="620" cy="76" r="42"></circle><circle class="module-inner" cx="620" cy="76" r="34"></circle><line x1="620" y1="76" x2="645" y2="51"></line><circle class="module-hub" cx="620" cy="76" r="5"></circle><text x="620" y="72" text-anchor="middle">IAS</text><text class="module-value" x="620" y="86" text-anchor="middle">q</text><text class="module-caption" x="620" y="130" text-anchor="middle">ANEMOMETRO</text></g>
+            <g class="theory-module theory-module-altimeter"><circle cx="620" cy="200" r="42"></circle><circle class="module-inner" cx="620" cy="200" r="34"></circle><path class="aneroid-capsule" d="M603 210C603 196 612 190 620 200C628 210 637 204 637 190"></path><line x1="620" y1="200" x2="644" y2="185"></line><circle class="module-hub" cx="620" cy="200" r="5"></circle><text x="620" y="196" text-anchor="middle">ALT</text><text class="module-value" x="620" y="210" text-anchor="middle">Ps</text><text class="module-caption" x="620" y="254" text-anchor="middle">ALTIMETRO</text></g>
+            <g class="theory-module theory-module-vsi"><circle cx="620" cy="324" r="42"></circle><circle class="module-inner" cx="620" cy="324" r="34"></circle><line x1="620" y1="324" x2="620" y2="299"></line><circle class="module-hub" cx="620" cy="324" r="5"></circle><text x="620" y="320" text-anchor="middle">VSI</text><text class="module-value" x="620" y="334" text-anchor="middle">Ps</text><text class="module-caption" x="620" y="378" text-anchor="middle">VARIOMETRO</text></g>
+            <g class="theory-key"><circle class="key-dot key-total" cx="734" cy="98" r="5"></circle><text x="746" y="102">Pt · totale</text><circle class="key-dot key-static" cx="734" cy="126" r="5"></circle><text x="746" y="130">Ps · statica</text><circle class="key-dot key-dynamic" cx="734" cy="154" r="5"></circle><text x="746" y="158">q = Pt − Ps</text></g>
+          </svg>
+          <div class="theory-stage-note"><span id="theory-stage-note">L’aria entra nel tubo di Pitot e nelle prese statiche.</span><b>● LIVE PATH</b></div>
         </div>
-        <button class="button button-small" id="guided-check" type="button" disabled>Controlla</button>
-        <p class="checkpoint-feedback" id="guided-feedback" hidden></p>
+        <div class="theory-step-buttons" role="group" aria-label="Fasi della spiegazione">
+          <button class="theory-step is-active" type="button" data-theory-step="pitot" aria-pressed="true"><span>01</span><strong>Pressioni</strong><small>Pt e Ps</small></button>
+          <button class="theory-step" type="button" data-theory-step="speed" aria-pressed="false"><span>02</span><strong>Velocità</strong><small>q → IAS</small></button>
+          <button class="theory-step" type="button" data-theory-step="altimeter" aria-pressed="false"><span>03</span><strong>Altimetro</strong><small>capsula aneroide</small></button>
+        </div>
+        <div class="theory-explanation"><span class="theory-kicker" id="theory-kicker">01 · PRESSIONI DI RIFERIMENTO</span><h3 id="theory-title">Due prese, due informazioni.</h3><p id="theory-copy">Il tubo di Pitot è orientato verso il flusso e porta la pressione totale P<sub>t</sub>. Le prese statiche, invece, sentono la pressione statica P<sub>s</sub> del campo circostante.</p><div class="theory-equation" id="theory-equation">P<sub>t</sub> = P<sub>s</sub> + q</div></div>
+        <div class="theory-physics-grid">
+          <section class="theory-derivation" aria-labelledby="theory-derivation-title">
+            <div class="theory-subheading"><span class="theory-live-dot"></span><span>DERIVAZIONE LIVE</span><b>PRESSIONE → VELOCITÀ</b></div>
+            <h3 id="theory-derivation-title">Dal differenziale alla velocità.</h3>
+            <p class="theory-derivation-intro">Il sistema non “legge” direttamente i nodi: misura due pressioni, ne calcola la differenza e applica una relazione di energia del flusso.</p>
+            <div class="theory-pressure-ledger">
+              <div><span>P<sub>t</sub> totale</span><strong id="theory-pt-readout">— Pa</strong><small>tubo di Pitot</small></div>
+              <div><span>P<sub>s</sub> statica</span><strong id="theory-ps-readout">— Pa</strong><small>prese statiche</small></div>
+              <div class="ledger-result"><span>q dinamica</span><strong id="theory-q-readout">— Pa</strong><small>P<sub>t</sub> − P<sub>s</sub></small></div>
+            </div>
+            <div class="theory-formula-steps">
+              <div><b>01</b><span>Differenziale misurato</span><strong id="theory-q-formula">q = P<sub>t</sub> − P<sub>s</sub> = — Pa</strong></div>
+              <div><b>02</b><span>Velocità equivalente</span><strong id="theory-speed-formula">V ≈ √(2q / ρ) = — kt</strong></div>
+              <div><b>03</b><span>Lettura dell’anemometro</span><strong id="theory-ias-formula">CAS → IAS = — kt</strong></div>
+            </div>
+            <p class="theory-derivation-note" id="theory-derivation-note">ρ è la densità dell’aria; ρ₀ è la densità di riferimento usata per la CAS. La radice quadrata rende visibile perché la pressione cresce con V².</p>
+          </section>
+
+          <section class="theory-cutaway" aria-labelledby="theory-cutaway-title">
+            <div class="theory-subheading"><span class="theory-live-dot"></span><span>SPACCATO ALTIMETRO</span><b>Ps / MECCANICA</b></div>
+            <h3 id="theory-cutaway-title">La capsula sente la quota.</h3>
+            <svg class="theory-cutaway-svg" viewBox="0 0 520 300" role="img" aria-labelledby="theory-cutaway-svg-title theory-cutaway-svg-desc">
+              <title id="theory-cutaway-svg-title">Spaccato animato di un altimetro con capsula aneroide</title>
+              <desc id="theory-cutaway-svg-desc">La pressione statica entra nella cassa; salendo diminuisce, la capsula sigillata si espande e un leveraggio ruota l’indice.</desc>
+              <defs>
+                <linearGradient id="cutaway-case-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#29495a"></stop><stop offset="1" stop-color="#10222c"></stop></linearGradient>
+                <linearGradient id="cutaway-capsule-gradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd18e"></stop><stop offset="1" stop-color="#c87836"></stop></linearGradient>
+                <marker id="cutaway-arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#69d2d0"></path></marker>
+              </defs>
+              <rect class="cutaway-case" x="12" y="18" width="496" height="264" rx="24"></rect>
+              <rect class="cutaway-face" x="28" y="34" width="464" height="232" rx="17"></rect>
+              <path class="cutaway-static-flow" d="M30 151H102" marker-end="url(#cutaway-arrow-cyan)"></path>
+              <text class="cutaway-label" x="34" y="125">STATIC PORT</text><text class="cutaway-label-muted" x="34" y="139">aria ambiente</text>
+              <rect class="cutaway-capsule-chamber" x="105" y="66" width="220" height="168" rx="14"></rect>
+              <text class="cutaway-label" x="122" y="88">CASING · Ps</text>
+              <path class="cutaway-case-flow" d="M124 108H302M124 192H302" marker-end="url(#cutaway-arrow-cyan)"></path>
+              <g id="theory-aneroid-motion">
+                <path class="aneroid-wafer aneroid-wafer-back" d="M158 143C158 127 180 116 220 116C260 116 282 127 282 143C282 159 260 170 220 170C180 170 158 159 158 143Z"></path>
+                <path class="aneroid-wafer" d="M158 133C158 117 180 106 220 106C260 106 282 117 282 133C282 149 260 160 220 160C180 160 158 149 158 133Z"></path>
+                <path class="aneroid-wafer aneroid-wafer-front" d="M158 123C158 107 180 96 220 96C260 96 282 107 282 123C282 139 260 150 220 150C180 150 158 139 158 123Z"></path>
+                <circle class="aneroid-seal" cx="220" cy="123" r="5"></circle>
+                <line class="cutaway-link" x1="282" y1="123" x2="336" y2="170"></line><circle class="cutaway-joint" cx="336" cy="170" r="6"></circle>
+              </g>
+              <text class="cutaway-label" x="169" y="211">CAPSULA ANEROIDE</text><text class="cutaway-label-muted" x="169" y="224">pressione interna sigillata</text>
+              <g class="cutaway-dial"><circle cx="404" cy="170" r="70"></circle><circle class="cutaway-dial-inner" cx="404" cy="170" r="58"></circle><path class="cutaway-ticks" d="M404 112V121M462 170H453M404 228V219M346 170H355"></path><line id="theory-cutaway-needle" class="cutaway-needle" x1="404" y1="170" x2="404" y2="119"></line><circle class="cutaway-hub" cx="404" cy="170" r="7"></circle><text x="404" y="160" text-anchor="middle">ALT</text><text id="theory-cutaway-altitude" class="cutaway-digital" x="404" y="184" text-anchor="middle">— ft</text></g>
+              <text id="theory-cutaway-pressure" class="cutaway-readout" x="122" y="253">Ps cassa: — hPa</text><text id="theory-cutaway-state" class="cutaway-state" x="476" y="253" text-anchor="end">QUOTA STABILIZZATA</text>
+            </svg>
+            <p class="theory-cutaway-note">Salita: Ps diminuisce → la capsula si espande → il leveraggio ruota l’indice verso una quota maggiore. In discesa avviene il contrario.</p>
+          </section>
+        </div>
+      </div>
+      <div class="theory-facts">
+        <article class="theory-fact card"><span>01</span><div><h3>Misura della velocità</h3><p>L’anemometro ricava la pressione dinamica dalla differenza tra totale e statica, poi la traduce in IAS.</p></div></article>
+        <article class="theory-fact card"><span>02</span><div><h3>Capsula aneroide</h3><p>Nell’altimetro la capsula reagisce alla pressione statica: la sua deformazione muove il sistema di indicazione.</p></div></article>
+        <article class="theory-fact card"><span>03</span><div><h3>Correzioni della catena</h3><p>IAS, CAS, EAS e TAS sono letture successive: ogni passaggio corregge un effetto diverso.</p></div></article>
       </div>
     </section>
 
-    <section class="mode-panel section-wrap" id="mode-explore" role="tabpanel" aria-labelledby="tab-explore" hidden>
-      <div>
-        <p class="eyebrow">EXPLORE / laboratorio</p>
-        <h2>Fai variare una cosa alla volta.</h2>
-        <p>Osserva la relazione tra quota reale, pressione statica, pressione dinamica e letture strumentali. Il pannello qui sotto è sempre live.</p>
+    <section class="mode-panel section-wrap exercises-panel" id="mode-exercises" role="tabpanel" aria-labelledby="tab-exercises" hidden>
+      <div class="exercise-intro">
+        <p class="eyebrow">ESERCIZI / ATMOSFERA E MISURE DI QUOTA</p>
+        <h2>Risolvi con una guida accanto.</h2>
+        <p>Tre problemi tratti dal materiale: prima richiami la teoria, poi scopri un passaggio alla volta, provi il risultato e infine confronti lo svolgimento completo.</p>
+        <div class="exercise-scoreboard"><span>PROGRESSO</span><strong id="exercise-progress">01 / 03</strong><small><b id="exercise-score">0</b> corrette</small></div>
       </div>
-      <div class="explore-note card"><span class="note-icon" aria-hidden="true">↗</span><p><strong>Suggerimento</strong><br>Prova prima a cambiare solo il setting, poi solo la quota. Le due azioni hanno effetti diversi.</p></div>
+      <div class="exercise-layout">
+        <article class="exercise-card card" id="exercise-card">
+          <div class="exercise-meta"><span id="exercise-type">01 · DENSITÀ</span><b id="exercise-state">IN ATTESA</b></div>
+          <h3 id="exercise-title">Ricava la density-altitude</h3>
+          <p id="exercise-question">Un altimetro standard legge 7.000 m e la temperatura esterna è −10 °C. Qual è la density-altitude?</p>
+          <div class="exercise-data" id="exercise-data"></div>
+          <div class="exercise-theory" id="exercise-theory"></div>
+          <div class="exercise-guide-toolbar"><span id="exercise-guide-progress">PASSO 01 / 04</span><button class="text-button" id="exercise-guide-next" type="button">Mostra passo 02 →</button></div>
+          <div class="exercise-guide" id="exercise-guide"></div>
+          <div class="exercise-answer-area" id="exercise-answer-area"></div>
+          <button class="button" id="exercise-submit" type="button" disabled>Verifica risposta</button>
+          <div class="exercise-feedback" id="exercise-feedback" hidden aria-live="polite"></div>
+          <button class="text-button" id="exercise-next" type="button" hidden>Prossimo esercizio →</button>
+        </article>
+        <aside class="exercise-method card">
+          <p class="eyebrow">METODO / SVOLGIMENTO GUIDATO</p>
+          <h3>Non saltare i passaggi fisici.</h3>
+          <div class="method-chain"><span>dati</span><i>→</i><strong>teoria</strong><i>→</i><strong>formula</strong><i>→</i><strong>risultato</strong></div>
+          <div class="method-rule"><span>01</span><p><strong>Leggi il fenomeno.</strong><br>Capisci se stai lavorando con densità, pressione o temperatura.</p></div>
+          <div class="method-rule"><span>02</span><p><strong>Converti le unità.</strong><br>Usa kelvin per la legge dei gas e metri per il gradiente termico.</p></div>
+          <div class="method-rule"><span>03</span><p><strong>Controlla il datum.</strong><br>QNH e QFE non riferiscono la quota allo stesso livello.</p></div>
+          <small class="exercise-source-note">Esercizi e risultati rielaborati dal PDF locale “Atmosfera e misure di quota”, pagine 1–5.</small>
+        </aside>
+      </div>
     </section>
 
-    <section class="mode-panel section-wrap" id="mode-challenge" role="tabpanel" aria-labelledby="tab-challenge" hidden>
-      <div>
-        <p class="eyebrow">CHALLENGE / altimetria</p>
-        <h2>Porta la pista a zero.</h2>
-        <p>Sei sulla pista di un aeroporto posto a 2.000 ft MSL. Scegli il riferimento che deve far leggere 0 ft all’altimetro.</p>
-      </div>
-      <div class="challenge card" id="qfe-challenge">
-        <div class="challenge-heading"><span class="challenge-badge" id="challenge-status">PREDICI</span><span class="challenge-score">1 decisione</span></div>
-        <p class="checkpoint-question">Quale setting deve essere selezionato affinché l’altimetro legga <strong>0 ft</strong> sulla pista?</p>
-        <fieldset class="setting-choices" id="challenge-choices">
-          <legend class="sr-only">Scegli il setting altimetrico</legend>
-          <label><input type="radio" name="challenge-setting" value="qnh"><span><b>QNH</b><small>riferimento MSL</small></span></label>
-          <label><input type="radio" name="challenge-setting" value="qfe"><span><b>QFE</b><small>riferimento pista</small></span></label>
-          <label><input type="radio" name="challenge-setting" value="std"><span><b>STD</b><small>1013,25 hPa</small></span></label>
-        </fieldset>
-        <button class="button" id="challenge-check" type="button" disabled>Conferma scelta</button>
-        <div class="challenge-feedback" id="challenge-feedback" hidden aria-live="polite"></div>
-        <button class="text-button" id="challenge-reset" type="button" hidden>Riprova</button>
-      </div>
-    </section>
-
-    <section class="lab section-wrap" aria-labelledby="lab-title">
+    <section class="mode-panel lab cockpit-mode-panel section-wrap is-active" id="mode-cockpit" role="tabpanel" aria-labelledby="tab-cockpit">
       <div class="section-heading">
         <div><p class="eyebrow">LIVE COCKPIT</p><h2 id="lab-title">La cabina è in ascolto.</h2></div>
         <p class="model-caption">Scenario: aeroporto a <strong>2.000 ft MSL</strong><br>QNH demo: <strong>1005,00 hPa</strong></p>
@@ -118,21 +215,26 @@
 
           <fieldset class="control-group">
             <legend>Stato dell’aeromobile</legend>
-            <label class="range-label" for="altitude-range"><span>Quota reale <small>MSL</small></span><output id="altitude-output" for="altitude-range">2.000 ft</output></label>
+            <div class="mobile-control-field">
+              <label class="range-label" for="altitude-range"><span>Quota reale <small>MSL</small></span><output id="altitude-output" for="altitude-range">2.000 ft</output></label>
             <input id="altitude-range" type="range" min="0" max="36000" step="100" value="2000">
             <div class="range-endpoints"><span>0 ft</span><span>36.000 ft</span></div>
             <label class="number-label" for="altitude-number">Valore preciso <span>ft</span></label>
-            <input class="number-input" id="altitude-number" type="number" min="0" max="36000" step="100" value="2000">
+              <input class="number-input" id="altitude-number" type="number" min="0" max="36000" step="100" value="2000">
+            </div>
+            <div class="mobile-control-field">
 
-            <label class="range-label" for="tas-range"><span>TAS <small>velocità vera</small></span><output id="tas-output" for="tas-range">180 kt</output></label>
-            <input id="tas-range" type="range" min="40" max="420" step="1" value="180">
-            <div class="range-endpoints"><span>40 kt</span><span>420 kt</span></div>
+            <label class="range-label" for="tas-range"><span>TAS <small>velocità vera</small></span><output id="tas-output" for="tas-range">110 kt</output></label>
+            <input id="tas-range" type="range" min="40" max="180" step="1" value="110">
+            <div class="range-endpoints"><span>40 kt</span><span>180 kt</span></div>
             <label class="number-label" for="tas-number">Valore preciso <span>kt</span></label>
-            <input class="number-input" id="tas-number" type="number" min="40" max="420" step="1" value="180">
+              <input class="number-input" id="tas-number" type="number" min="40" max="180" step="1" value="110">
+            </div>
           </fieldset>
 
           <fieldset class="control-group">
             <legend>Regolaggio altimetrico</legend>
+            <div class="setting-row">
             <label class="field-label" for="setting-preset">Riferimento</label>
             <select class="select-input" id="setting-preset">
               <option value="qfe">QFE · pista</option>
@@ -140,8 +242,11 @@
               <option value="std">STD · 1013,25 hPa</option>
               <option value="custom">Manuale</option>
             </select>
+            </div>
+            <div class="setting-row">
             <label class="number-label" for="setting-pressure">Pressione impostata <span>hPa</span></label>
             <input class="number-input" id="setting-pressure" type="number" min="850" max="1050" step="0.01" value="1005.00">
+            </div>
             <p class="field-help" id="setting-help">QNH: quota riferita al livello medio del mare.</p>
           </fieldset>
 
@@ -191,7 +296,28 @@
             <div class="scene-legend"><span><i class="legend-dot aircraft-dot"></i>aeromobile</span><span><i class="legend-line runway-dot"></i>pista</span><span><i class="legend-line reference-dot"></i>datum impostato</span></div>
           </section>
 
-          <div class="instrument-grid cockpit-deck">
+           <section class="cockpit-shell" aria-label="Pannello strumenti Cessna 172S">
+            <div class="cockpit-header">
+              <div class="cockpit-brand"><span class="cockpit-badge">C172S</span><div><strong>CESSNA 172S / AIR DATA TRAINER</strong><small>PRIMARY FLIGHT PANEL · DAY VFR</small></div></div>
+              <div class="panel-serial"><strong>N52KA</strong><small>TRAINING AIRCRAFT</small></div>
+              <div class="panel-screws" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            </div>
+
+            <div class="cockpit-window" aria-hidden="true">
+              <div class="windshield-sky"></div>
+              <div class="windshield-horizon"></div>
+              <div class="windshield-cloud cloud-left"></div><div class="windshield-cloud cloud-right"></div>
+              <div class="windshield-glare"></div>
+              <div class="windshield-frame frame-left"></div><div class="windshield-frame frame-right"></div>
+              <div class="windshield-info"><span>DAY VFR</span><span>QNH <b>1005</b></span><span>SIM · LIVE</span></div>
+              <div class="nose-view"><span class="spinner-line"></span><div class="nose-cowl"></div></div>
+            </div>
+
+            <div class="cockpit-panel">
+              <div class="panel-rail"><span>PRIMARY FLIGHT INSTRUMENTS</span><span>VACUUM · 14V · 60 Hz</span></div>
+              <div class="cockpit-main-row">
+                <div class="cockpit-primary">
+              <div class="instrument-grid cockpit-deck">
             <section class="instrument-card card" aria-labelledby="altimeter-title">
               <div class="card-heading"><span class="section-index">C</span><div><p class="eyebrow">STATIC PRESSURE</p><h3 id="altimeter-title">Altimetro</h3></div><span class="instrument-tag" id="altimeter-tag">QNH</span></div>
               <div class="gauge-wrap">
@@ -208,13 +334,14 @@
             <section class="instrument-card card" aria-labelledby="airspeed-title">
               <div class="card-heading"><span class="section-index">D</span><div><p class="eyebrow">PITOT / STATIC</p><h3 id="airspeed-title">Anemometro</h3></div><span class="instrument-tag orange">IAS</span></div>
               <div class="gauge-wrap">
-                <svg id="airspeed-gauge" class="gauge" viewBox="0 0 240 240" role="img" aria-label="Anemometro virtuale">
-                  <circle class="gauge-face" cx="120" cy="120" r="106"></circle><path class="gauge-arc arc-green" d="M38 170 A106 106 0 0 1 28 96"></path><path class="gauge-arc arc-yellow" d="M28 96 A106 106 0 0 1 50 48"></path><path class="gauge-arc arc-red" d="M50 48 A106 106 0 0 1 83 25"></path><g id="airspeed-ticks"></g>
-                  <text class="gauge-unit" x="120" y="91" text-anchor="middle">IAS</text><text id="airspeed-gauge-value" class="gauge-center-value" x="120" y="111" text-anchor="middle">174</text><text class="gauge-unit" x="120" y="130" text-anchor="middle">kt</text>
+                  <svg id="airspeed-gauge" class="gauge" viewBox="0 0 240 240" role="img" aria-label="Anemometro virtuale">
+                  <circle class="gauge-face" cx="120" cy="120" r="106"></circle><path id="airspeed-white-arc" class="gauge-arc arc-white"></path><path id="airspeed-green-arc" class="gauge-arc arc-green"></path><path id="airspeed-yellow-arc" class="gauge-arc arc-yellow"></path><line id="airspeed-vne-line" class="gauge-vne-line"></line><g id="airspeed-ticks"></g>
+                  <text class="gauge-unit" x="120" y="91" text-anchor="middle">IAS</text><text id="airspeed-gauge-value" class="gauge-center-value" x="120" y="111" text-anchor="middle">106</text><text class="gauge-unit" x="120" y="130" text-anchor="middle">kt</text>
                   <line id="airspeed-needle" class="needle speed-needle" x1="120" y1="120" x2="120" y2="33"></line><circle class="needle-hub orange-hub" cx="120" cy="120" r="7"></circle>
                 </svg>
               </div>
-              <div class="instrument-digital"><div><span>lettura IAS</span><strong id="airspeed-reading">174 kt</strong></div><div><span>TAS</span><strong id="airspeed-tas-reading">180 kt</strong></div><div><span>Mach</span><strong id="mach-reading">0,27</strong></div></div>
+              <div class="instrument-digital"><div><span>lettura IAS</span><strong id="airspeed-reading">106 kt</strong></div><div><span>TAS</span><strong id="airspeed-tas-reading">110 kt</strong></div><div><span>Mach</span><strong id="mach-reading">0,16</strong></div></div>
+              <div class="speed-reference-strip" aria-label="V-speeds Cessna 172S"><span><i class="speed-swatch white"></i>VS0 <b>40 kt</b></span><span><i class="speed-swatch green"></i>VS1 <b>48 kt</b></span><span><i class="speed-swatch white"></i>VFE <b>85 kt</b></span><span><i class="speed-swatch yellow"></i>VNO <b>129 kt</b></span><span><i class="speed-swatch red"></i>VNE <b>163 kt</b></span></div>
               <p class="instrument-note" id="airspeed-note">Il differenziale P<sub>t</sub> − P<sub>s</sub> alimenta la lettura.</p>
             </section>
 
@@ -230,7 +357,45 @@
               <div class="instrument-digital"><div><span>rateo verticale</span><strong id="vsi-reading">0 fpm</strong></div><div><span>stato volo</span><strong id="flight-readout">PAUSA</strong></div></div>
               <p class="instrument-note">La simulazione muove l’aeromobile in base al rateo: positivo in salita, negativo in discesa.</p>
             </section>
-          </div>
+              </div>
+
+              <div class="aux-instruments" aria-label="Strumenti di riferimento del six-pack Cessna 172">
+                <div class="aux-instrument">
+                  <div class="aux-gauge aux-attitude"><span class="aux-mark aux-mark-top">ATTITUDE</span><div class="attitude-horizon"><i></i><b></b></div><span class="aircraft-bar"></span></div>
+                  <strong>ORIZZONTE</strong><small>AI · pitch / bank</small>
+                </div>
+                <div class="aux-instrument">
+                  <div class="aux-gauge aux-heading"><span class="aux-mark aux-mark-top">DG</span><div class="heading-cardinal"><b>N</b><i>3</i><b>E</b><i>12</i><b>S</b><i>21</i><b>W</b><i>30</i></div><span class="heading-bug"></span></div>
+                  <strong>GIRO DIREZIONALE</strong><small>HDG · reference</small>
+                </div>
+                <div class="aux-instrument">
+                  <div class="aux-gauge aux-turn"><span class="aux-mark aux-mark-top">TURN</span><span class="turn-airplane">✈</span><span class="turn-index left"></span><span class="turn-index right"></span><span class="balance-tube"><i></i></span></div>
+                  <strong>SBANDAMENTO</strong><small>TURN · ball</small>
+                </div>
+              </div>
+              </div>
+
+              <aside class="radio-stack" aria-label="Radio stack Cessna 172">
+                <div class="radio-stack-label">RADIO STACK</div>
+                <div class="radio-unit"><span>COM 1 <b>ACTIVE</b></span><strong>118.00</strong><small>STBY&nbsp; 122.80</small><i>↕</i></div>
+                <div class="radio-unit"><span>NAV 1 <b>VOR/ILS</b></span><strong>110.50</strong><small>STBY&nbsp; 113.90</small><i>↕</i></div>
+                <div class="radio-unit transponder"><span>XPDR / ATC</span><strong>1200</strong><small>ALT · VFR</small><i>ON</i></div>
+                <div class="radio-unit radio-knobs"><span>ADF <b>DME</b></span><div><i></i><i></i><i></i><i></i></div><small>FREQ · MODE · IDENT</small></div>
+              </aside>
+              </div>
+
+              <div class="cockpit-console" aria-hidden="true">
+                <div class="console-bank engine-bank"><span class="console-caption">ENGINE CONTROLS</span><div class="lever-array">
+                  <div class="lever-control"><span class="lever-slot"><i class="lever throttle"></i></span><b>THROTTLE</b><small>FULL</small></div>
+                  <div class="lever-control"><span class="lever-slot"><i class="lever mixture"></i></span><b>MIXTURE</b><small>RICH</small></div>
+                  <div class="lever-control"><span class="lever-slot"><i class="lever carb"></i></span><b>CARB HEAT</b><small>COLD</small></div>
+                </div></div>
+                <div class="console-bank switch-bank"><span class="console-caption">ELECTRICAL / IGNITION</span><div class="switch-row"><span class="toggle-switch active"></span><span class="toggle-switch active"></span><span class="toggle-switch"></span><span class="toggle-switch active"></span><span class="toggle-switch"></span></div><div class="switch-labels"><b>BAT</b><b>ALT</b><b>PUMP</b><b>NAV</b><b>STROBE</b></div></div>
+                <div class="console-bank trim-bank"><span class="console-caption">TRIM / FLAPS</span><div class="trim-wheel"><i></i><b>NOSE UP</b><small>DN</small></div><div class="flap-track"><i></i><span>UP</span><span>10</span><span>20</span><span>30</span></div></div>
+              </div>
+              <div class="cockpit-yoke" aria-hidden="true"><div class="yoke-column"></div><div class="yoke-hub"><span>C</span></div><div class="yoke-arm yoke-arm-left"></div><div class="yoke-arm yoke-arm-right"></div><div class="yoke-grip yoke-grip-left"></div><div class="yoke-grip yoke-grip-right"></div></div>
+            </div>
+          </section>
 
           <section class="data-strip card" aria-labelledby="data-title">
             <div class="card-heading"><span class="section-index">F</span><div><p class="eyebrow">AIR DATA CHAIN</p><h3 id="data-title">La catena, senza saltare passaggi</h3></div></div>
@@ -239,7 +404,7 @@
               <div class="data-cell"><span>q = P<sub>t</sub> − P<sub>s</sub></span><strong id="q-readout">2.237 Pa</strong><small>pressione dinamica</small></div><span class="chain-arrow" aria-hidden="true">→</span>
               <div class="data-cell"><span>CAS</span><strong id="cas-readout">177 kt</strong><small>calibrata</small></div><span class="chain-arrow" aria-hidden="true">→</span>
               <div class="data-cell"><span>EAS</span><strong id="eas-readout">167 kt</strong><small>equivalente</small></div><span class="chain-arrow" aria-hidden="true">→</span>
-              <div class="data-cell"><span>TAS</span><strong id="tas-readout">180 kt</strong><small>vera</small></div>
+              <div class="data-cell"><span>TAS</span><strong id="tas-readout">110 kt</strong><small>vera</small></div>
             </div>
           </section>
         </div>
@@ -255,7 +420,7 @@
   <footer class="footer section-wrap"><span>Air Data Lab · v0.1</span><span>Modello educativo ISA · verificare le definizioni con il docente</span></footer>
 
   <script src="air-data-model.js"></script>
-  <script src="app.js?v=20260903-needle-fix-v3"></script>
+  <script src="app.js?v=20260904-theory-altimeter-v2"></script>
 </body>
 </html>
 
